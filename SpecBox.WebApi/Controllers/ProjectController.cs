@@ -22,28 +22,36 @@ public class ProjectController : Controller
         this.mapper = mapper;
     }
 
-    [HttpGet("list")]
+    [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<ProjectModel[]>> Projects()
     {
         var projects = await db.Projects.ToArrayAsync();
 
-        var model = projects.Select(mapper.Map<Project, ProjectModel>).ToArray();
+        // group projects by code and select versions to versions arry to suite ProjectModel[]
+        var projectsGrouped = projects.GroupBy(p => p.Code).Select(g => new ProjectModel
+        {
+            Code = g.Key,
+            Title = g.First().Title,
+            Description = g.First().Description,
+            RepositoryUrl = g.First().RepositoryUrl,
+            Versions = g.Select(p => p.Version).ToArray()
+        }).ToArray();
 
-        return Json(model);
+        return Json(projectsGrouped);
     }
 
     [HttpGet("{project}/features/{feature}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<FeatureModel>> Feature(string project, string feature)
+    public async Task<ActionResult<FeatureModel>> Feature(string project,  string feature, [FromQuery(Name = "version")] string? version)
     {
         try
         {
             var f = await db.Features
                 .Include(f => f.AssertionGroups)
                 .ThenInclude(g => g.Assertions)
-                .SingleOrDefaultAsync(f => f.Code == feature && f.Project.Code == project);
+                .SingleOrDefaultAsync(f => f.Code == feature && f.Project.Code == project && f.Project.Version == version);
             if (f == null) return NotFound();
 
             var model = mapper.Map<FeatureModel>(f);
@@ -59,14 +67,14 @@ public class ProjectController : Controller
     [HttpGet("{project}/structures:plain")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<StructureModel>> StructurePlain(string project)
+    public async Task<ActionResult<StructureModel>> StructurePlain(string project, [FromQuery(Name = "version")] string? version)
     {
-        var prj = await db.Projects.FirstOrDefaultAsync(p => p.Code == project);
+        var prj = await db.Projects.FirstOrDefaultAsync(p => p.Code == project && p.Version == version);
         if (prj == null) return NotFound();
 
         var projectModel = mapper.Map<Project, ProjectModel>(prj);
 
-        var nodes = await GetDefaultTreeModel(project);
+        var nodes = await GetDefaultTreeModel(project, version);
 
         var model = new StructureModel
         {
@@ -80,9 +88,9 @@ public class ProjectController : Controller
     [HttpGet("{project}/structures")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<TreeModel[]>> ListStructures(string project)
+    public async Task<ActionResult<TreeModel[]>> ListStructures(string project, [FromQuery(Name = "version")] string? version)
     {
-        var prj = await db.Projects.FirstOrDefaultAsync(p => p.Code == project);
+        var prj = await db.Projects.FirstOrDefaultAsync(p => p.Code == project && p.Version == version);
         if (prj == null) return NotFound();
 
         var trees = await db.Trees.Where(t => t.ProjectId == prj.Id).Select((tree) => new TreeModel
@@ -90,17 +98,17 @@ public class ProjectController : Controller
             Code = tree.Code,
             Title = tree.Title
         }).ToArrayAsync();
-        if(trees.Length == 0) return NotFound();
+        if (trees.Length == 0) return NotFound();
 
-        return Json(trees); 
+        return Json(trees);
     }
 
     [HttpGet("{project}/structures/{treeCode}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<StructureModel>> Structure(string project, string treeCode)
+    public async Task<ActionResult<StructureModel>> Structure(string project, string treeCode, [FromQuery(Name = "version")] string? version)
     {
-        var prj = await db.Projects.FirstOrDefaultAsync(p => p.Code == project);
+        var prj = await db.Projects.FirstOrDefaultAsync(p => p.Code == project && p.Version == version);
         if (prj == null) return NotFound();
 
         var tree = await db.Trees.FirstOrDefaultAsync(t => t.ProjectId == prj.Id && t.Code == treeCode);
@@ -119,10 +127,10 @@ public class ProjectController : Controller
         return Json(model);
     }
 
-    private async Task<TreeNodeModel[]> GetDefaultTreeModel(string projectCode)
+    private async Task<TreeNodeModel[]> GetDefaultTreeModel(string projectCode, string? version)
     {
         var nodes = await db.Features
-            .Where(f => f.Project.Code == projectCode)
+            .Where(f => f.Project.Code == projectCode && f.Project.Version == version)
             .Select(f => new TreeNodeModel
             {
                 Id = f.Id,

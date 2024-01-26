@@ -7,6 +7,7 @@ public class Project
 {
     public Guid Id { get; set; }
     public string Code { get; set; } = null!;
+    public string? Version { get; set; }
     public string Title { get; set; } = null!;
     public string? Description { get; set; }
     public string? RepositoryUrl { get; set; }
