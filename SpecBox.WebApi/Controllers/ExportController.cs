@@ -35,7 +35,7 @@ public class ExportController : Controller
                 Id = Guid.NewGuid(),
                 Code = project,
                 Version = version,
-                Title = data.Title ?? project,
+                Title = project,
             };
 
             db.Projects.Add(prj);
