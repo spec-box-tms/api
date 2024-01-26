@@ -20,15 +20,30 @@ public class ExportController : Controller
         this.logger = logger;
     }
 
-    [HttpPost("upload")]
-    public async Task<IActionResult> Upload([FromQuery(Name = "project")] string projectCode,
+    [HttpPost("upload/{project}")]
+    public async Task<IActionResult> Upload(string project, [FromQuery(Name = "version")] string? version,
         [FromBody] UploadData data)
     {
         await using var tran = await db.Database.BeginTransactionAsync();
 
         // получаем проект из БД
-        var prj = await db.Projects.FirstOrDefaultAsync(p => p.Code == projectCode);
-        if (prj == null) return NotFound();
+        var prj = await db.Projects.FirstOrDefaultAsync(p => p.Code == project && p.Version == version);
+        if (prj == null)
+        {
+            prj = new Project
+            {
+                Id = Guid.NewGuid(),
+                Code = project,
+                Version = version,
+                Title = data.Title ?? project,
+            };
+
+            db.Projects.Add(prj);
+        }
+        else // update existing project
+        {
+            prj.Version = version;
+        }
 
         // экспорт атрибутов и значений
         var attributes = await db.Attributes.Where(a => a.ProjectId == prj.Id).ToListAsync();

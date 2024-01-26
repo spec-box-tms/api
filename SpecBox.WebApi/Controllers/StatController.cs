@@ -25,10 +25,12 @@ public class StatController : Controller
     [HttpPost("upload-autotests")]
     public async Task<IActionResult> AutotestsStatUpload(
         [FromQuery(Name = "project")] string projectCode,
-        [FromBody] AutotestsStatUploadData data)
+        [FromBody] AutotestsStatUploadData data,
+        [FromQuery(Name = "version")] string? version
+        )
     {
-        var project = await db.Projects.FirstOrDefaultAsync(p => p.Code == projectCode);
-        if(project == null) return NotFound();
+        var project = await db.Projects.FirstOrDefaultAsync(p => p.Code == projectCode && p.Version == version);
+        if (project == null) return NotFound();
 
         var statRecord = new AutotestsStatRecord
         {
@@ -52,19 +54,21 @@ public class StatController : Controller
     public async Task<IActionResult> GetAutotestsStat(
         [FromQuery(Name = "project")] string projectCode,
         [FromQuery(Name = "from")] DateTime? dateFrom,
-        [FromQuery(Name = "to")] DateTime? dateTo)
+        [FromQuery(Name = "to")] DateTime? dateTo,
+        [FromQuery(Name = "version")] string? version
+        )
     {
-        var project = await db.Projects.SingleAsync(p => p.Code == projectCode);
+        var project = await db.Projects.SingleAsync(p => p.Code == projectCode && p.Version == version);
         var from = NormalizeDateFrom(dateFrom);
         var to = NormalizeDateTo(dateTo);
-        
+
         var assertions = await db.AssertionsStat
             .Where(assertion =>
                 assertion.ProjectId == project.Id &&
                 assertion.Timestamp >= from &&
                 assertion.Timestamp < to)
             .ToArrayAsync();
-        
+
         var autotests = await db.AutotestsStat
             .Where(assertion =>
                 assertion.ProjectId == project.Id &&
@@ -78,10 +82,10 @@ public class StatController : Controller
             Autotests = autotests.Select(mapper.Map<AutotestsStatModel>).ToArray(),
             Project = mapper.Map<ProjectModel>(project)
         };
-        
+
         return Json(model);
     }
-    
+
     private static DateTime NormalizeDateFrom(DateTime? dateFrom)
     {
         // если значение не задано, то отдаем данные за последние 3 месяца

@@ -8,4 +8,5 @@ public class ProjectModel
     [Required] public string Title { get; set; } = null!;
     public string? Description { get; set; }
     public string? RepositoryUrl { get; set; }
+    public string?[] Versions { get; set; } = null!;
 }
