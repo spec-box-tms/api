@@ -15,6 +15,6 @@ public class ProjectProfile : Profile
         CreateMap<Feature, FeatureModel>();
         CreateMap<AutotestsStatRecord, AutotestsStatModel>();
         CreateMap<AssertionsStatRecord, AssertionsStatModel>();
-        CreateMap<Domain.Model.Project, ProjectModel>();
+        CreateMap<Domain.Model.Project, ProjectVersionModel>();
     }
 }

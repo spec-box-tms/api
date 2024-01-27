@@ -33,8 +33,9 @@ builder.Logging
     .AddConsoleFormatter<ConsoleJsonFormatter, ConsoleFormatterOptions>();
 
 var app = builder.Build();
-
-app.UsePathBase(app.Configuration["pathBase"]);
+Console.WriteLine("Hello {0}", app.Configuration["pathBase"]);
+// app.UsePathBase(app.Configuration["pathBase"]);
+app.UsePathBase("/api");
 app.MapControllers();
 
 if (app.Environment.IsDevelopment())

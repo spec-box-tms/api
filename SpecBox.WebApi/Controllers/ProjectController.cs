@@ -28,7 +28,6 @@ public class ProjectController : Controller
     {
         var projects = await db.Projects.ToArrayAsync();
 
-        // group projects by code and select versions to versions arry to suite ProjectModel[]
         var projectsGrouped = projects.GroupBy(p => p.Code).Select(g => new ProjectModel
         {
             Code = g.Key,
@@ -72,7 +71,7 @@ public class ProjectController : Controller
         var prj = await db.Projects.FirstOrDefaultAsync(p => p.Code == project && p.Version == version);
         if (prj == null) return NotFound();
 
-        var projectModel = mapper.Map<Project, ProjectModel>(prj);
+        var projectModel = mapper.Map<Project, ProjectVersionModel>(prj);
 
         var nodes = await GetDefaultTreeModel(project, version);
 
@@ -114,7 +113,7 @@ public class ProjectController : Controller
         var tree = await db.Trees.FirstOrDefaultAsync(t => t.ProjectId == prj.Id && t.Code == treeCode);
         if (tree == null) return NotFound();
 
-        var projectModel = mapper.Map<Project, ProjectModel>(prj);
+        var projectModel = mapper.Map<Project, ProjectVersionModel>(prj);
 
         var nodes = await GetTreeModel(tree);
 

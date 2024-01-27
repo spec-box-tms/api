@@ -80,7 +80,7 @@ public class StatController : Controller
         {
             Assertions = assertions.Select(mapper.Map<AssertionsStatModel>).ToArray(),
             Autotests = autotests.Select(mapper.Map<AutotestsStatModel>).ToArray(),
-            Project = mapper.Map<ProjectModel>(project)
+            Project = mapper.Map<ProjectVersionModel>(project),
         };
 
         return Json(model);
