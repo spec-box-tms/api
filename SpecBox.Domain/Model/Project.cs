@@ -11,4 +11,6 @@ public class Project
     public string Title { get; set; } = null!;
     public string? Description { get; set; }
     public string? RepositoryUrl { get; set; }
+    public DateTime? CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }

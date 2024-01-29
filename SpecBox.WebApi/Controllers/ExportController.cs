@@ -37,13 +37,16 @@ public class ExportController : Controller
                 Version = version,
                 Title = data.Project.Title ?? project,
                 Description = data.Project.Description,
-                RepositoryUrl = data.Project.RepositoryUrl
+                RepositoryUrl = data.Project.RepositoryUrl,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
             db.Projects.Add(prj);
         }
         else
         {
+            prj.UpdatedAt = DateTime.UtcNow;
             if (data.Project.Title != null)
             {
                 prj.Title = data.Project.Title ?? project;

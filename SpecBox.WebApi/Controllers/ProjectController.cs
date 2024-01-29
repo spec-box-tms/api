@@ -34,7 +34,11 @@ public class ProjectController : Controller
             Title = g.First().Title,
             Description = g.First().Description,
             RepositoryUrl = g.First().RepositoryUrl,
-            Versions = g.Select(p => p.Version).ToArray()
+            Versions = g.Select(p => new VersionModel 
+                {
+                    Version = p.Version, 
+                    UpdatedAt = p.UpdatedAt 
+                }).ToArray()
         }).ToArray();
 
         return Json(projectsGrouped);
@@ -43,7 +47,7 @@ public class ProjectController : Controller
     [HttpGet("{project}/features/{feature}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<FeatureModel>> Feature(string project,  string feature, [FromQuery(Name = "version")] string? version)
+    public async Task<ActionResult<FeatureModel>> Feature(string project, string feature, [FromQuery(Name = "version")] string? version)
     {
         try
         {
