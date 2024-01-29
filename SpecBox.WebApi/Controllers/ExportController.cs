@@ -35,14 +35,27 @@ public class ExportController : Controller
                 Id = Guid.NewGuid(),
                 Code = project,
                 Version = version,
-                Title = project,
+                Title = data.Project.Title ?? project,
+                Description = data.Project.Description,
+                RepositoryUrl = data.Project.RepositoryUrl
             };
 
             db.Projects.Add(prj);
         }
-        else // update existing project
+        else
         {
-            prj.Version = version;
+            if (data.Project.Title != null)
+            {
+                prj.Title = data.Project.Title ?? project;
+            }
+            if(data.Project.Description != null)
+            {
+                prj.Description = data.Project.Description;
+            }
+            if(data.Project.RepositoryUrl != null)
+            {
+                prj.RepositoryUrl = data.Project.RepositoryUrl;
+            }
         }
 
         // экспорт атрибутов и значений
@@ -237,7 +250,7 @@ public class ExportController : Controller
             foreach (var feature in data.Features)
             {
                 if (feature.Attributes == null) continue;
-                
+
                 foreach (var attribute in feature.Attributes)
                 {
                     var attributeCode = attribute.Key;

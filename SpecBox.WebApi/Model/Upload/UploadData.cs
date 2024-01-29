@@ -9,4 +9,6 @@ public class UploadData
     [Required] public AttributeModel[] Attributes { get; set; } = null!;
 
     [Required] public TreeModel[] Trees { get; set; } = null!;
+
+    [Required] public ProjectModel Project { get; set; } = null!;
 }
