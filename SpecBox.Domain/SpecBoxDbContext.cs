@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
+using SpecBox.Domain.Lib;
 using SpecBox.Domain.Model;
 using Attribute = SpecBox.Domain.Model.Attribute;
 using Npgsql;
@@ -39,6 +40,10 @@ public class SpecBoxDbContext : DbContext
     public DbSet<Export> Exports { get; set; } = null!;
     public async Task BuildTree(Guid projectId) => await ExecuteSQL("CALL \"BuildTree\"($1)", projectId);
     public async Task MergeExportedData(Guid exportId) => await ExecuteSQL("CALL \"MergeExportedData\"($1)", exportId);
+
+    public DbSet<TestRun> TestRuns { get; set; } = null!;
+    
+    public DbSet<TestResult> TestResults { get; set; } = null!;
 
     public async Task<NpgsqlConnection> GetConnection()
     {
@@ -79,5 +84,7 @@ public class SpecBoxDbContext : DbContext
                 x => x.HasOne<AttributeValue>().WithMany().HasForeignKey(x => x.AttributeValueId),
                 x => x.HasOne<Feature>().WithMany().HasForeignKey(x => x.FeatureId)
             );
+        
+        modelBuilder.ApplyUtcDateTimeConverter();
     }
 }

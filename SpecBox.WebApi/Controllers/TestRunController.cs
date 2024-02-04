@@ -1,0 +1,215 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SpecBox.Domain;
+using SpecBox.Domain.Model;
+using SpecBox.WebApi.Model.TestRun;
+
+namespace SpecBox.WebApi.Controllers;
+
+[ApiController]
+[Route("tests")]
+public class TestRunController : Controller
+{
+    private readonly SpecBoxDbContext db;
+    private readonly ILogger logger;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestRunController"/> class.
+    /// </summary>
+    /// <param name="db">The instance used for accessing the database.</param>
+    /// <param name="logger">The instance used for logging.</param>
+    public TestRunController(SpecBoxDbContext db, ILogger<TestRunController> logger)
+    {
+        this.db = db;
+        this.logger = logger;
+    }
+
+    /// <summary>
+    /// Creates a new test run for the specified project.
+    /// </summary>
+    /// <param name="project">The project code.</param>
+    /// <param name="version">The project version. Default version if not provided</param>
+    /// <param name="data">The object containing the test run data.</param>
+    /// <returns>An 200 SUCCESS representing the HTTP response.</returns>
+    [HttpPost("projects/{project}/testruns", Name = "CreateTestRun")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CreateTestRun(string project, [FromQuery(Name = "version")] string? version, [FromBody] CreateTestRun data)
+    {
+        var prj = await db.Projects.FirstOrDefaultAsync(p => p.Code == project && p.Version == version);
+        if (prj == null) return NotFound();
+
+        var testRun = new Domain.Model.TestRun
+        {
+            ProjectId = prj.Id,
+            Title = data.Title,
+            Description = data.Description,
+            CreatedAt = DateTime.Now,
+        };
+
+        await using var tran = await db.Database.BeginTransactionAsync();
+        db.TestRuns.Add(testRun);
+
+        var assertions = await db.Assertions.Where(assertion => assertion.AssertionGroup.Feature.ProjectId == prj.Id).ToListAsync();
+
+        foreach (var assertion in assertions)
+        {
+            var testResult = new TestResult
+            {
+                Assertion = assertion,
+                TestRun = testRun,
+                Status = "NEW"
+            };
+            db.TestResults.Add(testResult);
+        }
+        await db.SaveChangesAsync();
+        await tran.CommitAsync();
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Retrieves a list of test runs for a specific project from the database.
+    /// </summary>
+    /// <param name="project">The project code for which to retrieve the test runs.</param>
+    /// <returns>An array of TestRunModel objects representing the retrieved test runs.</returns>
+    [HttpGet("projects/{project}/testruns", Name = "ListTestRuns")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<TestRunModel[]>> ListTestRuns(string project)
+    {
+        var prj = await db.Projects.FirstOrDefaultAsync(p => p.Code == project);
+        if (prj == null) return NotFound();
+
+        var testRuns = await db.TestRuns.Where(tr => tr.ProjectId == prj.Id).Select(tr => new TestRunModel
+        {
+            Id = tr.Id,
+            Title = tr.Title,
+            ProjectCode = prj.Code,
+            Version = prj.Version,
+            CreatedAt = tr.CreatedAt,
+            Description = tr.Description,
+            StartedAt = tr.StartedAt,
+            CompletedAt = tr.CompletedAt
+        }).ToArrayAsync();
+
+        return Json(testRuns);
+    }
+
+    /// <summary>
+    /// Retrieves test results for a specific test run.
+    /// </summary>
+    /// <param name="testRunId">The ID of the test run.</param>
+    /// <returns>A TestResultModel representing the asynchronous operation.</returns>
+    [HttpGet("testruns/{testRunId}/testresults", Name = "ListTestResults")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<TestResultModel>> ListTestResults(Guid testRunId)
+    {
+        var testRun = await db.TestRuns.FirstOrDefaultAsync(t => t.Id == testRunId);
+        if (testRun == null) return NotFound();
+
+        var testResults = await db.TestResults.Where(testResult => testResult.TestRunId == testRun.Id).Select(t => new TestResultModel
+        {
+            Id = t.Id,
+            Status = t.Status,
+            Report = t.Report,
+            CompletedAt = t.CompletedAt,
+            AssertionTitle = t.Assertion.Title,
+            AssertionGroupTitle = t.Assertion.AssertionGroup.Title!,
+            FeatureCode = t.Assertion.AssertionGroup.Feature.Code,
+            FeatureTitle = t.Assertion.AssertionGroup.Feature.Title
+        }).ToArrayAsync();
+
+        return Json(testResults);
+    }
+    /// <summary>
+    /// Retrieves a specific test result for a given project, test run, and test result ID from the database.
+    /// </summary>
+    /// <param name="testRunId">The ID of the test run.</param>
+    /// <param name="testResultId">The ID of the test result.</param>
+    /// <returns>The retrieved test result. If the project, test run, or test result is not found, it returns a 404 Not Found response.</returns>
+    [HttpGet("testruns/{testRunId}/testresults/{testResultId}", Name = "GetTestResult")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<TestResultModel>> GetTestResult(Guid testRunId, Guid testResultId)
+    {
+        var testRun = await db.TestRuns.FirstOrDefaultAsync(t => t.Id == testRunId);
+        if (testRun == null) return NotFound();
+
+        var testResult = await db.TestResults
+            .Where(testResult => testResult.TestRunId == testRun.Id && testResult.Id == testResultId)
+            .Select(t => new TestResultModel
+            {
+                Id = t.Id,
+                Status = t.Status,
+                Report = t.Report,
+                CompletedAt = t.CompletedAt,
+                AssertionTitle = t.Assertion.Title,
+                AssertionGroupTitle = t.Assertion.AssertionGroup.Title!,
+                FeatureCode = t.Assertion.AssertionGroup.Feature.Code,
+                FeatureTitle = t.Assertion.AssertionGroup.Feature.Title
+            }).FirstOrDefaultAsync();
+        if (testResult == null) return NotFound();
+
+        return Json(testResult);
+    }
+
+    /// <summary>
+    /// Updates test result with provided Status and Report.
+    /// </summary>
+    /// <param name="testRunId">The ID of the test run.</param>
+    /// <param name="testResultId">The ID of the test result.</param>
+    /// <param name="data">The data to update the test result with.</param>
+    /// <returns>An updated TestResultModel.</returns>
+    [HttpPut("testruns/{testRunId}/testresults/{testResultId}", Name = "UpdateTestResult")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<TestResultModel>> UpdateTestResult(
+        Guid testRunId,
+        Guid testResultId,
+        [FromBody] UpdateTestResult data
+    )
+    {
+        var testRun = await db.TestRuns.FirstOrDefaultAsync(t => t.Id == testRunId);
+        if (testRun == null) return NotFound();
+
+        var testResultToUpdate = await db.TestResults.FirstOrDefaultAsync(t => t.TestRunId == testRun.Id && t.Id == testResultId);
+        if (testResultToUpdate == null) return NotFound();
+
+        switch (data.Status)
+        {
+            case "SUCCESS":
+            case "SKIP":
+                break;
+            case "FAIL":
+                if (string.IsNullOrEmpty(data.Report)) return BadRequest("Report should be set for FAIL status");
+                break;
+            default:
+                return BadRequest($"Status {data.Status} is not supported");
+        }
+
+        testResultToUpdate.Status = data.Status;
+        testResultToUpdate.Report = data.Report;
+        testResultToUpdate.CompletedAt = DateTime.Now;
+        await db.SaveChangesAsync();
+
+        var testResult = await db.TestResults
+            .Where(testResult => testResult.TestRunId == testRun.Id && testResult.Id == testResultId)
+            .Select(t => new TestResultModel
+            {
+                Id = t.Id,
+                Status = t.Status,
+                Report = t.Report,
+                CompletedAt = t.CompletedAt,
+                AssertionTitle = t.Assertion.Title,
+                AssertionGroupTitle = t.Assertion.AssertionGroup.Title!,
+                FeatureCode = t.Assertion.AssertionGroup.Feature.Code,
+                FeatureTitle = t.Assertion.AssertionGroup.Feature.Title
+            }).FirstOrDefaultAsync();
+        if (testResult == null) return NotFound();
+
+        return Json(testResult);
+    }
+}

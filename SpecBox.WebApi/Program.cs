@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Console;
@@ -22,9 +23,10 @@ builder.Services.AddAutoMapper(cfg => cfg.AddProfile<ProjectProfile>());
 
 builder.Services.AddSwaggerGen(opts =>
 {
-    opts.CustomOperationIds(a => a.RelativePath);
     opts.CustomSchemaIds(a => a.FullName);
     opts.SupportNonNullableReferenceTypes();
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    opts.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
 
 builder.Logging
@@ -33,7 +35,6 @@ builder.Logging
     .AddConsoleFormatter<ConsoleJsonFormatter, ConsoleFormatterOptions>();
 
 var app = builder.Build();
-Console.WriteLine("Hello {0}", app.Configuration["pathBase"]);
 // app.UsePathBase(app.Configuration["pathBase"]);
 app.UsePathBase("/api");
 app.MapControllers();
