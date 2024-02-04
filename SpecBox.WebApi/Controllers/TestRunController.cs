@@ -28,7 +28,7 @@ public class TestRunController : Controller
     /// Creates a new test run for the specified project.
     /// </summary>
     /// <param name="project">The project code.</param>
-    /// <param name="version">The project version. Default version if not provided</param>
+    /// <param name="version">The project version. Default version if not provided.</param>
     /// <param name="data">The object containing the test run data.</param>
     /// <returns>An 200 SUCCESS representing the HTTP response.</returns>
     [HttpPost("projects/{project}/testruns", Name = "CreateTestRun")]

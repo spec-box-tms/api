@@ -16,6 +16,9 @@ public class DefaultController : Controller
         this.jsonOptions = jsonOptions.Value;
     }
 
+    /// <summary>
+    /// Проверка работоспособности приложения
+    /// </summary>
     [HttpGet("ping"), ApiExplorerSettings(IgnoreApi = true)]
     public IActionResult Ping()
     {
@@ -23,6 +26,9 @@ public class DefaultController : Controller
         return Ok();
     }
 
+    /// <summary>
+    /// Получение конфигурации приложения
+    /// </summary>
     [HttpGet("config")]
     [ProducesResponseType(typeof(ConfigurationModel), StatusCodes.Status200OK)]
     public IActionResult Config()

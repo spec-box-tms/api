@@ -22,6 +22,9 @@ public class ProjectController : Controller
         this.mapper = mapper;
     }
 
+    /// <summary>
+    /// Returns the list of projects.
+    /// </summary>
     [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<ProjectModel[]>> Projects()
@@ -44,6 +47,13 @@ public class ProjectController : Controller
         return Json(projectsGrouped);
     }
 
+    /// <summary>
+    /// Returns the feature details.
+    /// </summary>
+    /// <param name="project">The project code.</param>
+    /// <param name="feature">The feature code.</param>
+    /// <param name="version">The project version. Default version if not provided.</param>
+    /// <returns>An 200 SUCCESS representing the HTTP response.</returns>
     [HttpGet("{project}/features/{feature}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -67,6 +77,12 @@ public class ProjectController : Controller
         }
     }
 
+    /// <summary>
+    /// Returns the list of features for a specific project.
+    /// </summary>
+    /// <param name="project">The project code.</param>
+    /// <param name="version">The project version. Default version if not provided.</param>
+    /// <returns>An array of FeatureModel objects representing the retrieved project features.</returns>
     [HttpGet("{project}/structures:plain")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -88,6 +104,12 @@ public class ProjectController : Controller
         return Json(model);
     }
 
+    /// <summary>
+    /// Returns the list of structures for a specific project.
+    /// </summary>
+    /// <param name="project">The project code.</param>
+    /// <param name="version">The project version. Default version if not provided.</param>
+    /// <returns>An array of TreeModel objects representing the retrieved project structures.</returns>
     [HttpGet("{project}/structures")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -106,6 +128,13 @@ public class ProjectController : Controller
         return Json(trees);
     }
 
+    /// <summary>
+    /// Returns the structure details.
+    /// </summary>
+    /// <param name="project">The project code.</param>
+    /// <param name="treeCode">The tree code.</param>
+    /// <param name="version">The project version. Default version if not provided.</param>
+    /// <returns>The tree structure of retrived project tree.</returns>
     [HttpGet("{project}/structures/{treeCode}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
