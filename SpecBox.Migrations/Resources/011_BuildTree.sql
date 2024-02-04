@@ -158,15 +158,15 @@ WHERE "TreeId" in (SELECT "Id" FROM "Tree" as tree WHERE tree."ProjectId" = "v_P
 
 -- Data to insert to TreeNode, тут выбираем уникальные пары и вставляем, соблюдаем порядок от корня к листьям
 INSERT INTO public."TreeNode" ("Id", "ParentId", "TreeId", "Title", "Amount", "AmountAutomated", "SortOrder")
-SELECT DISTINCT tids."Id"              as "Id",
-                tids."ParentId"        as "ParentId",
-                tids."TreeId"          as "TreeId",
-                aval."Title"           as "Title",
-                tids."Amount"          as "Amount",
-                tids."AmountAutomated" as "AmountAutomated",
-                aval."SortOrder"       as "SortOrder"
+SELECT DISTINCT tids."Id"                           as "Id",
+                tids."ParentId"                     as "ParentId",
+                tids."TreeId"                       as "TreeId",
+                aval."Title"                        as "Title",
+                tids."Amount"                       as "Amount",
+                tids."AmountAutomated"              as "AmountAutomated",
+                aval."SortOrder"                    as "SortOrder"
 FROM temp_tree_ids as tids
-         JOIN "AttributeValue" as aval on tids."AttributeValueId" = aval."Id";
+        LEFT JOIN "AttributeValue" as aval on tids."AttributeValueId" = aval."Id";
 
 -- Data to insert to TreeNode, находим самые глубокие узлы связанные с фичами и вставляем
 INSERT INTO public."TreeNode" ("ParentId", "FeatureId", "TreeId", "Title", "Amount", "AmountAutomated")
