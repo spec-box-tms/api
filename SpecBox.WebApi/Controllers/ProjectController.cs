@@ -25,7 +25,7 @@ public class ProjectController : Controller
     /// <summary>
     /// Returns the list of projects.
     /// </summary>
-    [HttpGet()]
+    [HttpGet(Name = "ListProjects")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<ProjectModel[]>> Projects()
     {
@@ -54,7 +54,7 @@ public class ProjectController : Controller
     /// <param name="feature">The feature code.</param>
     /// <param name="version">The project version. Default version if not provided.</param>
     /// <returns>An 200 SUCCESS representing the HTTP response.</returns>
-    [HttpGet("{project}/features/{feature}")]
+    [HttpGet("{project}/features/{feature}", Name = "GetFeature")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<FeatureModel>> Feature(string project, string feature, [FromQuery(Name = "version")] string? version)
@@ -83,7 +83,7 @@ public class ProjectController : Controller
     /// <param name="project">The project code.</param>
     /// <param name="version">The project version. Default version if not provided.</param>
     /// <returns>An array of FeatureModel objects representing the retrieved project features.</returns>
-    [HttpGet("{project}/structures:plain")]
+    [HttpGet("{project}/structures:plain", Name = "GetStructurePlain")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<StructureModel>> StructurePlain(string project, [FromQuery(Name = "version")] string? version)
@@ -110,7 +110,7 @@ public class ProjectController : Controller
     /// <param name="project">The project code.</param>
     /// <param name="version">The project version. Default version if not provided.</param>
     /// <returns>An array of TreeModel objects representing the retrieved project structures.</returns>
-    [HttpGet("{project}/structures")]
+    [HttpGet("{project}/structures", Name = "ListStructures")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<TreeModel[]>> ListStructures(string project, [FromQuery(Name = "version")] string? version)
@@ -135,7 +135,7 @@ public class ProjectController : Controller
     /// <param name="treeCode">The tree code.</param>
     /// <param name="version">The project version. Default version if not provided.</param>
     /// <returns>The tree structure of retrived project tree.</returns>
-    [HttpGet("{project}/structures/{treeCode}")]
+    [HttpGet("{project}/structures/{treeCode}", Name = "GetStructure")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<StructureModel>> Structure(string project, string treeCode, [FromQuery(Name = "version")] string? version)

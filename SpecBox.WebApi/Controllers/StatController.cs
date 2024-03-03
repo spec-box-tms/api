@@ -22,7 +22,7 @@ public class StatController : Controller
         this.mapper = mapper;
     }
 
-    [HttpPost("upload-autotests")]
+    [HttpPost("upload-autotests", Name = "AutotestsStatUpload")]
     public async Task<IActionResult> AutotestsStatUpload(
         [FromQuery(Name = "project")] string projectCode,
         [FromBody] AutotestsStatUploadData data,
@@ -49,7 +49,7 @@ public class StatController : Controller
         return Ok();
     }
 
-    [HttpGet]
+    [HttpGet(Name = "GetAutotestsStat")]
     [ProducesResponseType(typeof(StatModel), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAutotestsStat(
         [FromQuery(Name = "project")] string projectCode,

@@ -10,8 +10,8 @@ public class TestResultModel
   public string? Report { get; set; }
   public DateTime? CompletedAt { get; set; }
 
-  public string AssertionTitle { get; set; } = null!;
-  public string AssertionGroupTitle { get; set; } = null!;
-  public string FeatureCode { get; set; } = null!;
-  public string FeatureTitle { get; set; } = null!;
+  [Required] public string AssertionTitle { get; set; } = null!;
+  [Required] public string AssertionGroupTitle { get; set; } = null!;
+  [Required] public string FeatureCode { get; set; } = null!;
+  [Required] public string FeatureTitle { get; set; } = null!;
 }

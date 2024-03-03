@@ -1,7 +1,9 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SpecBox.Domain;
 using SpecBox.Domain.Model;
+using SpecBox.WebApi.Model.Common;
 using SpecBox.WebApi.Model.TestRun;
 
 namespace SpecBox.WebApi.Controllers;
@@ -12,16 +14,19 @@ public class TestRunController : Controller
 {
     private readonly SpecBoxDbContext db;
     private readonly ILogger logger;
+    private readonly IMapper mapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestRunController"/> class.
     /// </summary>
     /// <param name="db">The instance used for accessing the database.</param>
     /// <param name="logger">The instance used for logging.</param>
-    public TestRunController(SpecBoxDbContext db, ILogger<TestRunController> logger)
+    /// <param name="mapper">The instance used for mapping.</param>
+    public TestRunController(SpecBoxDbContext db, ILogger<TestRunController> logger, IMapper mapper)
     {
         this.db = db;
         this.logger = logger;
+        this.mapper = mapper;
     }
 
     /// <summary>
@@ -72,13 +77,14 @@ public class TestRunController : Controller
     /// Retrieves a list of test runs for a specific project from the database.
     /// </summary>
     /// <param name="project">The project code for which to retrieve the test runs.</param>
+    /// <param name="version">The project version. Default version if not provided.</param>
     /// <returns>An array of TestRunModel objects representing the retrieved test runs.</returns>
     [HttpGet("projects/{project}/testruns", Name = "ListTestRuns")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<TestRunModel[]>> ListTestRuns(string project)
+    public async Task<ActionResult<ProjectTestRunsModel>> ListTestRuns(string project, [FromQuery(Name = "version")] string? version)
     {
-        var prj = await db.Projects.FirstOrDefaultAsync(p => p.Code == project);
+        var prj = await db.Projects.FirstOrDefaultAsync(p => p.Code == project && p.Version == version);
         if (prj == null) return NotFound();
 
         var testRuns = await db.TestRuns.Where(tr => tr.ProjectId == prj.Id).Select(tr => new TestRunModel
@@ -93,7 +99,15 @@ public class TestRunController : Controller
             CompletedAt = tr.CompletedAt
         }).ToArrayAsync();
 
-        return Json(testRuns);
+        var projectModel = mapper.Map<Project, ProjectVersionModel>(prj);
+
+        var model = new ProjectTestRunsModel
+        {
+            Project = projectModel,
+            TestRuns = testRuns
+        };
+
+        return Json(model);
     }
 
     /// <summary>
@@ -104,7 +118,7 @@ public class TestRunController : Controller
     [HttpGet("testruns/{testRunId}/testresults", Name = "ListTestResults")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<TestResultModel>> ListTestResults(Guid testRunId)
+    public async Task<ActionResult<TestResultModel[]>> ListTestResults(Guid testRunId)
     {
         var testRun = await db.TestRuns.FirstOrDefaultAsync(t => t.Id == testRunId);
         if (testRun == null) return NotFound();
@@ -157,6 +171,7 @@ public class TestRunController : Controller
 
     /// <summary>
     /// Updates test result with provided Status and Report.
+    /// Supported Statuses: PASSED, SKIPPED, BLOCKED, INVALID, FAILED, NEW
     /// </summary>
     /// <param name="testRunId">The ID of the test run.</param>
     /// <param name="testResultId">The ID of the test result.</param>
@@ -180,10 +195,13 @@ public class TestRunController : Controller
 
         switch (data.Status)
         {
-            case "SUCCESS":
-            case "SKIP":
+            case "PASSED":
+            case "SKIPPED":
                 break;
-            case "FAIL":
+            
+            case "BLOCKED":
+            case "INVALID":
+            case "FAILED":
                 if (string.IsNullOrEmpty(data.Report)) return BadRequest("Report should be set for FAIL status");
                 break;
             default:

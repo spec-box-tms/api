@@ -4,7 +4,7 @@ namespace SpecBox.WebApi.Model.TestRun;
 
 public class TestRunModel
 {
-  public Guid Id { get; set; }
+  [Required] public Guid Id { get; set; }
   [Required] public string Title { get; set; } = null!;
   public string? Description { get; set; }
   [Required] public string ProjectCode { get; set; } = null!;
