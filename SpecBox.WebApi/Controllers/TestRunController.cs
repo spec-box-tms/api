@@ -111,6 +111,44 @@ public class TestRunController : Controller
     }
 
     /// <summary>
+    /// Retrieves a specific test run by ID.
+    /// </summary>
+    /// <param name="testRunId">Test run ID</param>
+    /// <returns>Detail model of test run and project</returns>
+    [HttpGet("testruns/{testRunId}", Name = "GetTestRun")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<TestRunDetailsModel>> GetTestRun(Guid testRunId)
+    {
+        var testRun = await db.TestRuns.FirstOrDefaultAsync(tr => tr.Id == testRunId);
+        if (testRun == null) return NotFound();
+
+        var prj = await db.Projects.SingleAsync(p => p.Id == testRun.ProjectId);
+
+        var projectModel = mapper.Map<Project, ProjectVersionModel>(prj);
+
+        var testRunModel = new TestRunModel
+        {
+            Id = testRun.Id,
+            Title = testRun.Title,
+            ProjectCode = prj.Code,
+            Version = prj.Version,
+            CreatedAt = testRun.CreatedAt,
+            Description = testRun.Description,
+            StartedAt = testRun.StartedAt,
+            CompletedAt = testRun.CompletedAt
+        };
+
+        var result = new TestRunDetailsModel
+        {
+            Project = projectModel,
+            TestRun = testRunModel
+        };
+
+        return Json(result);
+    }
+
+    /// <summary>
     /// Retrieves test results for a specific test run.
     /// </summary>
     /// <param name="testRunId">The ID of the test run.</param>
@@ -198,11 +236,12 @@ public class TestRunController : Controller
             case "PASSED":
             case "SKIPPED":
                 break;
-            
+
             case "BLOCKED":
             case "INVALID":
             case "FAILED":
-                if (string.IsNullOrEmpty(data.Report)) return BadRequest("Report should be set for FAIL status");
+                // temporary supressed
+                // if (string.IsNullOrEmpty(data.Report)) return BadRequest("Report should be set for FAIL status");
                 break;
             default:
                 return BadRequest($"Status {data.Status} is not supported");
