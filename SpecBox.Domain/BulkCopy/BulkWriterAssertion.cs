@@ -6,7 +6,7 @@ namespace SpecBox.Domain.BulkCopy;
 public class BulkWriterAssertion : BulkWriter
 {
     private const string COMMAND =
-        "COPY \"ExportAssertion\" (\"ExportId\", \"FeatureCode\",\"GroupTitle\",\"Title\",\"Description\", \"IsAutomated\") FROM STDIN (FORMAT BINARY)";
+        "COPY \"ExportAssertion\" (\"ExportId\", \"FeatureCode\",\"GroupTitle\",\"GroupOrder\",\"Title\",\"AssertionOrder\",\"Description\", \"IsAutomated\") FROM STDIN (FORMAT BINARY)";
 
     public BulkWriterAssertion(NpgsqlConnection connection) : base(COMMAND, connection)
     {
@@ -16,7 +16,9 @@ public class BulkWriterAssertion : BulkWriter
         Guid exportId,
         string featureCode,
         string groupTitle,
+        int groupOrder,
         string title,
+        int asserionOrder,
         string? description,
         bool isAutomated)
     {
@@ -24,7 +26,9 @@ public class BulkWriterAssertion : BulkWriter
         await Writer.WriteAsync(exportId, NpgsqlDbType.Uuid);
         await Writer.WriteAsync(featureCode, NpgsqlDbType.Text);
         await Writer.WriteAsync(groupTitle, NpgsqlDbType.Text);
+        await Writer.WriteAsync(groupOrder, NpgsqlDbType.Integer);
         await Writer.WriteAsync(title, NpgsqlDbType.Text);
+        await Writer.WriteAsync(asserionOrder, NpgsqlDbType.Integer);
         await Writer.WriteAsync(description, NpgsqlDbType.Text);
         await Writer.WriteAsync(isAutomated, NpgsqlDbType.Boolean);
     }

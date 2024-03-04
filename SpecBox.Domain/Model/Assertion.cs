@@ -10,6 +10,7 @@ public class Assertion
     public string Title { get; set; } = null!;
     public string? Description { get; set; }
     public bool IsAutomated { get; set; }
+    public int Order { get; set; }
 
     public Guid AssertionGroupId { get; set; }
     public AssertionGroup AssertionGroup { get; set; } = null!;

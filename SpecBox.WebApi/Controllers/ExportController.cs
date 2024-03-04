@@ -230,16 +230,24 @@ public class ExportController : Controller
         {
             foreach (var feature in data.Features)
             {
+                var groupOrder = 0;
                 foreach (var group in feature.Groups)
                 {
+                    groupOrder++;
+                    var assertionOrder = 0;
                     foreach (var assertion in group.Assertions)
                     {
+                        assertionOrder++;
                         await assertionWriter.AddAssertion(
                             export.Id,
                             feature.Code,
                             group.Title,
+                            groupOrder,
                             assertion.Title,
-                            assertion.Description, assertion.IsAutomated);
+                            assertionOrder,
+                            assertion.Description,
+                            assertion.IsAutomated
+                        );
                     }
                 }
             }
