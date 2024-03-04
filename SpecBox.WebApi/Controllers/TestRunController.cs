@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -44,12 +45,14 @@ public class TestRunController : Controller
         var prj = await db.Projects.FirstOrDefaultAsync(p => p.Code == project && p.Version == version);
         if (prj == null) return NotFound();
 
-        var testRun = new Domain.Model.TestRun
+        var now = DateTime.Now;
+
+        var testRun = new TestRun
         {
             ProjectId = prj.Id,
             Title = data.Title,
             Description = data.Description,
-            CreatedAt = DateTime.Now,
+            CreatedAt = now,
         };
 
         await using var tran = await db.Database.BeginTransactionAsync();
@@ -63,7 +66,8 @@ public class TestRunController : Controller
             {
                 Assertion = assertion,
                 TestRun = testRun,
-                Status = "NEW"
+                Status = "NEW",
+                UpdatedAt = now
             };
             db.TestResults.Add(testResult);
         }
@@ -161,17 +165,7 @@ public class TestRunController : Controller
         var testRun = await db.TestRuns.FirstOrDefaultAsync(t => t.Id == testRunId);
         if (testRun == null) return NotFound();
 
-        var testResults = await db.TestResults.Where(testResult => testResult.TestRunId == testRun.Id).Select(t => new TestResultModel
-        {
-            Id = t.Id,
-            Status = t.Status,
-            Report = t.Report,
-            CompletedAt = t.CompletedAt,
-            AssertionTitle = t.Assertion.Title,
-            AssertionGroupTitle = t.Assertion.AssertionGroup.Title!,
-            FeatureCode = t.Assertion.AssertionGroup.Feature.Code,
-            FeatureTitle = t.Assertion.AssertionGroup.Feature.Title
-        }).ToArrayAsync();
+        var testResults = await db.TestResults.Where(testResult => testResult.TestRunId == testRun.Id).Select(_mapTestResult).ToArrayAsync();
 
         return Json(testResults);
     }
@@ -191,17 +185,7 @@ public class TestRunController : Controller
 
         var testResult = await db.TestResults
             .Where(testResult => testResult.TestRunId == testRun.Id && testResult.Id == testResultId)
-            .Select(t => new TestResultModel
-            {
-                Id = t.Id,
-                Status = t.Status,
-                Report = t.Report,
-                CompletedAt = t.CompletedAt,
-                AssertionTitle = t.Assertion.Title,
-                AssertionGroupTitle = t.Assertion.AssertionGroup.Title!,
-                FeatureCode = t.Assertion.AssertionGroup.Feature.Code,
-                FeatureTitle = t.Assertion.AssertionGroup.Feature.Title
-            }).FirstOrDefaultAsync();
+            .Select(_mapTestResult).FirstOrDefaultAsync();
         if (testResult == null) return NotFound();
 
         return Json(testResult);
@@ -247,26 +231,45 @@ public class TestRunController : Controller
                 return BadRequest($"Status {data.Status} is not supported");
         }
 
+        var latestCompletedAt = await db.TestResults
+            .Where(t => t.TestRunId == testRun.Id && t.CompletedAt != null)
+            .OrderByDescending(t => t.CompletedAt)
+            .Select(t => t.CompletedAt)
+            .FirstOrDefaultAsync();
+
+        if (testResultToUpdate.Status == "NEW")
+        {
+            testResultToUpdate.StartedAt = latestCompletedAt ?? DateTime.Now;
+            testResultToUpdate.CompletedAt = DateTime.Now;
+            if (testRun.StartedAt == null)
+            {
+                testRun.StartedAt = DateTime.Now;
+            }
+        }
+        testResultToUpdate.UpdatedAt = DateTime.Now;
         testResultToUpdate.Status = data.Status;
         testResultToUpdate.Report = data.Report;
-        testResultToUpdate.CompletedAt = DateTime.Now;
         await db.SaveChangesAsync();
 
         var testResult = await db.TestResults
             .Where(testResult => testResult.TestRunId == testRun.Id && testResult.Id == testResultId)
-            .Select(t => new TestResultModel
-            {
-                Id = t.Id,
-                Status = t.Status,
-                Report = t.Report,
-                CompletedAt = t.CompletedAt,
-                AssertionTitle = t.Assertion.Title,
-                AssertionGroupTitle = t.Assertion.AssertionGroup.Title!,
-                FeatureCode = t.Assertion.AssertionGroup.Feature.Code,
-                FeatureTitle = t.Assertion.AssertionGroup.Feature.Title
-            }).FirstOrDefaultAsync();
+            .Select(_mapTestResult).FirstOrDefaultAsync();
         if (testResult == null) return NotFound();
 
         return Json(testResult);
     }
+
+    private Expression<Func<TestResult, TestResultModel>> _mapTestResult = (TestResult testResult) => new TestResultModel
+    {
+        Id = testResult.Id,
+        Status = testResult.Status,
+        Report = testResult.Report,
+        UpdatedAt = testResult.UpdatedAt,
+        StartedAt = testResult.StartedAt,
+        CompletedAt = testResult.CompletedAt,
+        AssertionTitle = testResult.Assertion.Title,
+        AssertionGroupTitle = testResult.Assertion.AssertionGroup.Title,
+        FeatureCode = testResult.Assertion.AssertionGroup.Feature.Code,
+        FeatureTitle = testResult.Assertion.AssertionGroup.Feature.Title
+    };
 }

@@ -9,7 +9,9 @@ public class TestResult
 
   public string Status { get; set; } = null!;
   public string? Report { get; set; }
+  public DateTime? StartedAt { get; set; }
   public DateTime? CompletedAt { get; set; }
+  public DateTime UpdatedAt { get; set; }
   
   public Guid AssertionId { get; set; }
   public Assertion Assertion { get; set; } = null!;

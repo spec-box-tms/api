@@ -6,7 +6,7 @@ namespace SpecBox.Domain.Model;
 public class AssertionGroup
 {
     public Guid Id { get; set; }
-    public string? Title { get; set; }
+    public string Title { get; set; } = null!;
 
     public Guid FeatureId { get; set; }
     public Feature Feature { get; set; } = null!;

@@ -6,4 +6,5 @@ public class UpdateTestResult
 {
   [Required] public string Status { get; set; } = null!;
   public string? Report { get; set; }
+  public DateTime updatedAt { get; set; }
 }
