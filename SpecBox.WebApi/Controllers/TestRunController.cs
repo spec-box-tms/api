@@ -66,7 +66,7 @@ public class TestRunController : Controller
             {
                 Assertion = assertion,
                 TestRun = testRun,
-                Status = "NEW",
+                Status = assertion.IsAutomated ? "SKIPPED" : "NEW",
                 UpdatedAt = now
             };
             db.TestResults.Add(testResult);
@@ -180,15 +180,56 @@ public class TestRunController : Controller
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<TestResultModel>> GetTestResult(Guid testRunId, Guid testResultId)
     {
-        var testRun = await db.TestRuns.FirstOrDefaultAsync(t => t.Id == testRunId);
-        if (testRun == null) return NotFound();
-
         var testResult = await db.TestResults
-            .Where(testResult => testResult.TestRunId == testRun.Id && testResult.Id == testResultId)
+            .Where(testResult => testResult.TestRunId == testRunId && testResult.Id == testResultId)
             .Select(_mapTestResult).FirstOrDefaultAsync();
         if (testResult == null) return NotFound();
 
         return Json(testResult);
+    }
+    /// <summary>
+    /// Retrieves test result history.
+    /// </summary>
+    /// <param name="testRunId">The ID of the test run.</param>
+    /// <param name="testResultId">The ID of the test result.</param>
+    /// <returns>Returns history items for the same assertion in test runs and versions of the Proejct.</returns>
+    [HttpGet("testruns/{testRunId}/testresults/{testResultId}/history", Name = "GetTestResultHistory")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<TestResultHistoryModel[]>> GetTestResultHistory(Guid testRunId, Guid testResultId)
+    {
+        var filter = await db.TestResults
+            .Where(testResult => testResult.TestRunId == testRunId && testResult.Id == testResultId)
+            .Select(testResult => new
+            {
+                projectCode = testResult.Assertion.AssertionGroup.Feature.Project.Code,
+                featureCode = testResult.Assertion.AssertionGroup.Feature.Code,
+                assertionGroup = testResult.Assertion.AssertionGroup.Title,
+                assertionTitle = testResult.Assertion.Title,
+            }).FirstOrDefaultAsync();
+        if (filter == null) return NotFound();
+
+        var historyItems = await db.TestResults
+            .Where(testResult =>
+                testResult.Assertion.AssertionGroup.Feature.Project.Code == filter.projectCode &&
+                testResult.Assertion.AssertionGroup.Feature.Code == filter.featureCode &&
+                testResult.Assertion.AssertionGroup.Title == filter.assertionGroup &&
+                testResult.Assertion.Title == filter.assertionTitle &&
+                testResult.CompletedAt != null
+            )
+            .Select((testResult) => new TestResultHistoryModel
+            {
+                Id = testResult.Id,
+                TestRunId = testResult.TestRunId,
+                TestRunTitle = testResult.TestRun.Title,
+                Version = testResult.TestRun.Project.Version,
+                Status = testResult.Status,
+                Report = testResult.Report,
+                CompletedAt = testResult.CompletedAt!.Value
+            })
+            .ToListAsync();
+
+        return Json(historyItems);
     }
 
     /// <summary>
@@ -231,20 +272,21 @@ public class TestRunController : Controller
                 return BadRequest($"Status {data.Status} is not supported");
         }
 
+        if (testRun.StartedAt == null)
+        {
+            testRun.StartedAt = DateTime.Now;
+        }
+
         var latestCompletedAt = await db.TestResults
             .Where(t => t.TestRunId == testRun.Id && t.CompletedAt != null)
             .OrderByDescending(t => t.CompletedAt)
             .Select(t => t.CompletedAt)
             .FirstOrDefaultAsync();
 
-        if (testResultToUpdate.Status == "NEW")
+        if (testResultToUpdate.CompletedAt == null)
         {
             testResultToUpdate.StartedAt = latestCompletedAt ?? DateTime.Now;
             testResultToUpdate.CompletedAt = DateTime.Now;
-            if (testRun.StartedAt == null)
-            {
-                testRun.StartedAt = DateTime.Now;
-            }
         }
         testResultToUpdate.UpdatedAt = DateTime.Now;
         testResultToUpdate.Status = data.Status;
@@ -262,6 +304,7 @@ public class TestRunController : Controller
     private Expression<Func<TestResult, TestResultModel>> _mapTestResult = (TestResult testResult) => new TestResultModel
     {
         Id = testResult.Id,
+        TestRunId = testResult.TestRunId,
         Status = testResult.Status,
         Report = testResult.Report,
         UpdatedAt = testResult.UpdatedAt,

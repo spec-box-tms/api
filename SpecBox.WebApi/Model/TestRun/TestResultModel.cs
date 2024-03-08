@@ -5,6 +5,7 @@ namespace SpecBox.WebApi.Model.TestRun;
 public class TestResultModel
 {
   [Required] public Guid Id { get; set; }
+  [Required] public Guid TestRunId { get; set; }
 
   [Required] public string Status { get; set; } = null!;
   public string? Report { get; set; }
