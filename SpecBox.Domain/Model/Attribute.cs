@@ -6,7 +6,7 @@ namespace SpecBox.Domain.Model;
 public class Attribute
 {
     public Guid Id { get; set; }
-    public string? Code { get; set; }
+    public string Code { get; set; } = null!;
     public string? Title { get; set; }
 
     public Guid ProjectId { get; set; }
