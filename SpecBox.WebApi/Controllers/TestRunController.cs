@@ -183,6 +183,27 @@ public class TestRunController : Controller
     }
 
     /// <summary>
+    /// Deletes a specific test run by ID.
+    /// </summary>
+    /// <param name="testRunId">Test run ID</param>
+    /// <returns>status</returns>
+    [HttpDelete("testruns/{testRunId}", Name = "DeleteTestRun")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> DeleteTestRun(Guid testRunId)
+    {
+        var testRun = await db.TestRuns.FirstOrDefaultAsync(tr => tr.Id == testRunId);
+        if (testRun == null) return NotFound();
+
+        db.TestResults.RemoveRange(db.TestResults.Where(tr => tr.TestRunId == testRun.Id));
+        db.TestRuns.Remove(testRun);
+
+        await db.SaveChangesAsync();
+        
+        return Ok();
+    }
+
+    /// <summary>
     /// Retrieves test results for a specific test run.
     /// </summary>
     /// <param name="testRunId">The ID of the test run.</param>
