@@ -12,4 +12,14 @@ public class TestRunModel
   [Required] public DateTime CreatedAt {get;set;}
   public DateTime? StartedAt {get;set;}
   public DateTime? CompletedAt {get;set;}
+
+  [Required] public int TotalCount {get;set;}
+  [Required] public int PassedCount {get;set;}
+  [Required] public int FailedCount {get;set;}
+  [Required] public int BlockedCount {get;set;}
+  [Required] public int InvalidCount {get;set;}
+  [Required] public int SkippedCount {get;set;}
+
+  public string? Environment {get;set;}
+  public string? Configuration {get;set;}
 }

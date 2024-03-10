@@ -13,6 +13,16 @@ public class TestRun
   public DateTime? StartedAt { get; set; }
   public DateTime? CompletedAt { get; set; }
 
+  public int TotalCount { get; set; }
+  public int PassedCount { get; set; }
+  public int FailedCount { get; set; }
+  public int BlockedCount { get; set; }  
+  public int InvalidCount { get; set; }
+  public int SkippedCount { get; set; }
+
+  public string? Environment { get; set; }
+  public string? Configuration { get; set; }
+
   public Guid ProjectId { get; set; }
   public Project Project { get; set; } = null!;
 }

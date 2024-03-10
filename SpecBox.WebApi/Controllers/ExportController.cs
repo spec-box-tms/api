@@ -20,7 +20,17 @@ public class ExportController : Controller
         this.logger = logger;
     }
 
+    /// <summary>
+    /// Uploads project data. If project with the same code and version exists, it will be updated.
+    /// If project has test runs, it can't be updated.
+    /// </summary>
+    /// <param name="project">The project code</param>
+    /// <param name="version">Optional project version</param>
+    /// <param name="data">Data to be upladed</param>
+    /// <returns></returns>
     [HttpPost("upload/{project}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Upload(string project, [FromQuery(Name = "version")] string? version,
         [FromBody] UploadData data)
     {
@@ -46,6 +56,12 @@ public class ExportController : Controller
         }
         else
         {
+            var hasTestRuns = await db.TestRuns.AnyAsync(tr => tr.ProjectId == prj.Id);
+            if(hasTestRuns)
+            {
+                return BadRequest("Project has test runs, it can't be updated");
+            }
+
             prj.UpdatedAt = DateTime.UtcNow;
             if (data.Project.Title != null)
             {

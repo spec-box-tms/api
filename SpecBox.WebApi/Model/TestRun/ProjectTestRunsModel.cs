@@ -7,4 +7,5 @@ public class ProjectTestRunsModel
 {
   [Required] public ProjectVersionModel Project { get; set; } = null!;
   [Required] public TestRunModel[] TestRuns { get; set; } = null!;
+  [Required] public TestRunConfigurationsModel Configurations { get; set; } = null!;
 }
