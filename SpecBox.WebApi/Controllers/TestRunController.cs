@@ -96,25 +96,7 @@ public class TestRunController : Controller
         var prj = await db.Projects.FirstOrDefaultAsync(p => p.Code == project && p.Version == version);
         if (prj == null) return NotFound();
 
-        var testRuns = await db.TestRuns.Where(tr => tr.Project.Code == prj.Code).Select(tr => new TestRunModel
-        {
-            Id = tr.Id,
-            Title = tr.Title,
-            ProjectCode = prj.Code,
-            Version = tr.Project.Version,
-            CreatedAt = tr.CreatedAt,
-            Description = tr.Description,
-            StartedAt = tr.StartedAt,
-            CompletedAt = tr.CompletedAt,
-            TotalCount = tr.TotalCount,
-            PassedCount = tr.PassedCount,
-            FailedCount = tr.FailedCount,
-            BlockedCount = tr.BlockedCount,
-            InvalidCount = tr.InvalidCount,
-            SkippedCount = tr.SkippedCount,
-            Environment = tr.Environment,
-            Configuration = tr.Configuration
-        }).ToArrayAsync();
+        var testRuns = await db.TestRuns.Include("Project").Where(tr => tr.Project.Code == prj.Code).ToArrayAsync();
 
         var projectModel = mapper.Map<Project, ProjectVersionModel>(prj);
         var configurations = await _getTestRunConfigurations(prj);
@@ -122,7 +104,7 @@ public class TestRunController : Controller
         var model = new ProjectTestRunsModel
         {
             Project = projectModel,
-            TestRuns = testRuns,
+            TestRuns = testRuns.Select(_mapTestRun).ToArray(),
             Configurations = configurations
         };
 
@@ -139,32 +121,57 @@ public class TestRunController : Controller
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<TestRunDetailsModel>> GetTestRun(Guid testRunId)
     {
-        var testRun = await db.TestRuns.FirstOrDefaultAsync(tr => tr.Id == testRunId);
+        var testRun = await db.TestRuns.Include("Project").FirstOrDefaultAsync(tr => tr.Id == testRunId);
         if (testRun == null) return NotFound();
 
         var prj = await db.Projects.SingleAsync(p => p.Id == testRun.ProjectId);
 
         var projectModel = mapper.Map<Project, ProjectVersionModel>(prj);
 
-        var testRunModel = new TestRunModel
+        var testRunModel = _mapTestRun(testRun);
+
+        var result = new TestRunDetailsModel
         {
-            Id = testRun.Id,
-            Title = testRun.Title,
-            ProjectCode = testRun.Project.Code,
-            Version = testRun.Project.Version,
-            CreatedAt = testRun.CreatedAt,
-            Description = testRun.Description,
-            StartedAt = testRun.StartedAt,
-            CompletedAt = testRun.CompletedAt,
-            TotalCount = testRun.TotalCount,
-            PassedCount = testRun.PassedCount,
-            FailedCount = testRun.FailedCount,
-            BlockedCount = testRun.BlockedCount,
-            InvalidCount = testRun.InvalidCount,
-            SkippedCount = testRun.SkippedCount,
-            Environment = testRun.Environment,
-            Configuration = testRun.Configuration
+            Project = projectModel,
+            TestRun = testRunModel
         };
+
+        return Json(result);
+    }
+
+    /// <summary>
+    /// Completes a specific test run by ID. All test result in NEW status will be marked as SKIPPED.
+    /// </summary>
+    /// <param name="testRunId">Test run ID</param>
+    /// <returns>Detail model of test run and project</returns>
+    [HttpPost("testruns/{testRunId}/complete", Name = "CompleteTestRun")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<TestRunDetailsModel>> CompleteTestRun(Guid testRunId)
+    {
+        var testRun = await db.TestRuns.Include("Project").FirstOrDefaultAsync(tr => tr.Id == testRunId);
+        if (testRun == null) return NotFound();
+
+        var prj = await db.Projects.SingleAsync(p => p.Id == testRun.ProjectId);
+
+        var projectModel = mapper.Map<Project, ProjectVersionModel>(prj);
+
+        testRun.CompletedAt = DateTime.Now;
+
+        var incompleteTestResults = await db.TestResults
+            .Where(tr => tr.TestRunId == testRun.Id && tr.Status == "NEW")
+            .ToListAsync();
+
+        foreach (var testResult in incompleteTestResults)
+        {
+            testResult.Status = "SKIPPED";
+            testResult.CompletedAt = testRun.CompletedAt;
+        }
+
+        await db.SaveChangesAsync();
+        await _updateTestRunStats(testRun);
+        await db.SaveChangesAsync();
+        TestRunModel testRunModel = _mapTestRun(testRun);
 
         var result = new TestRunDetailsModel
         {
@@ -276,6 +283,8 @@ public class TestRunController : Controller
         var testRun = await db.TestRuns.FirstOrDefaultAsync(t => t.Id == testRunId);
         if (testRun == null) return NotFound();
 
+        if (testRun.CompletedAt != null) return BadRequest("Test run is already completed");
+
         var testResultToUpdate = await db.TestResults.FirstOrDefaultAsync(t => t.TestRunId == testRun.Id && t.Id == testResultId);
         if (testResultToUpdate == null) return NotFound();
 
@@ -327,7 +336,31 @@ public class TestRunController : Controller
         return Json(testResult);
     }
 
-    private async Task<TestRunConfigurationsModel> _getTestRunConfigurations(Project project) {
+    private TestRunModel _mapTestRun(TestRun testRun)
+    {
+        return new TestRunModel
+        {
+            Id = testRun.Id,
+            Title = testRun.Title,
+            ProjectCode = testRun.Project.Code,
+            Version = testRun.Project.Version,
+            CreatedAt = testRun.CreatedAt,
+            Description = testRun.Description,
+            StartedAt = testRun.StartedAt,
+            CompletedAt = testRun.CompletedAt,
+            TotalCount = testRun.TotalCount,
+            PassedCount = testRun.PassedCount,
+            FailedCount = testRun.FailedCount,
+            BlockedCount = testRun.BlockedCount,
+            InvalidCount = testRun.InvalidCount,
+            SkippedCount = testRun.SkippedCount,
+            Environment = testRun.Environment,
+            Configuration = testRun.Configuration
+        };
+    }
+
+    private async Task<TestRunConfigurationsModel> _getTestRunConfigurations(Project project)
+    {
         var configurations = await db.TestRuns
             .Where(tr => tr.Project.Code == project.Code && tr.Configuration != null)
             .Select(tr => tr.Configuration!)
@@ -348,7 +381,8 @@ public class TestRunController : Controller
         return result;
     }
 
-    private async Task _updateTestRunStats(TestRun testRun) {
+    private async Task _updateTestRunStats(TestRun testRun)
+    {
         testRun.TotalCount = await db.TestResults.CountAsync(tr => tr.TestRunId == testRun.Id);
         testRun.PassedCount = await db.TestResults.CountAsync(tr => tr.TestRunId == testRun.Id && tr.Status == "PASSED");
         testRun.FailedCount = await db.TestResults.CountAsync(tr => tr.TestRunId == testRun.Id && tr.Status == "FAILED");
