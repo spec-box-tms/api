@@ -29,7 +29,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./SpecBox.WebApi/Dockerfile
           push: true
           tags: snitkody/spec-box-tms-api:latest
 
