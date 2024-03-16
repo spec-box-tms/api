@@ -69,11 +69,13 @@ docker run -p 8080:80 -ti \
  snitkody/spec-box-tms-api:latest
  ```
 
+Можно использовать переменную AUTO_MIGRATE=true для автоматического применения миграции БД перед запуском
+
 ## Самостоятельная сборка контейнера
 
 ```bash
 # сборка
-docker build -t spec-box-api:0.0.1 -f ./SpecBox.WebApi/Dockerfile .
+docker build -t spec-box-tms-api:0.0.1 .
 
 # локальный запуск
 docker run -p 8080:80 -ti \
