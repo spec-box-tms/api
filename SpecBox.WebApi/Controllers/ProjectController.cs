@@ -124,7 +124,8 @@ public class ProjectController : Controller
             Code = tree.Code,
             Title = tree.Title
         }).ToArrayAsync();
-        if (trees.Length == 0) return NotFound();
+        
+        if (trees.Length == 0) Json(new TreeModel[0]);
 
         return Json(trees);
     }
