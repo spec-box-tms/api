@@ -9,8 +9,10 @@ public class FeatureModel
     [Required] public string Title { get; set; } = null!;
 
     public string? Description { get; set; }
-    
+
     public string? FilePath { get; set; }
-    
+
     [Required] public List<AssertionGroupModel> AssertionGroups { get; } = new();
+
+    [Required] public List<AttributeValueModel> Attributes { get; } = new();
 }

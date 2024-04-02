@@ -65,6 +65,8 @@ public class ProjectController : Controller
             var f = await db.Features
                 .Include(f => f.AssertionGroups)
                 .ThenInclude(g => g.Assertions)
+                .Include(f => f.Attributes)
+                .ThenInclude(a => a.Attribute)
                 .SingleOrDefaultAsync(f => f.Code == feature && f.Project.Code == project && f.Project.Version == version);
             if (f == null) return NotFound();
 
@@ -124,7 +126,7 @@ public class ProjectController : Controller
             Code = tree.Code,
             Title = tree.Title
         }).ToArrayAsync();
-        
+
         if (trees.Length == 0) Json(new TreeModel[0]);
 
         return Json(trees);
@@ -182,7 +184,7 @@ public class ProjectController : Controller
                                             (f.Description != null && f.Description.Contains("$" + featureTarget.Code)) ||
 
                                                 f.AssertionGroups.Any(g => g.Title.Contains("$" + featureTarget.Code)) ||
-                                                
+
                                                 f.AssertionGroups.Any(g =>
                                                     g.Assertions.Any(a => a.Title.Contains("$" + featureTarget.Code) ||
                                                     (a.Description != null && a.Description.Contains("$" + featureTarget.Code)))
