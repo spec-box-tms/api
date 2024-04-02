@@ -64,16 +64,18 @@ public class StatController : Controller
 
         var assertions = await db.AssertionsStat
             .Where(assertion =>
-                assertion.ProjectId == project.Id &&
+                assertion.Project.Code == project.Code &&
                 assertion.Timestamp >= from &&
                 assertion.Timestamp < to)
+            .OrderBy(s => s.Timestamp)
             .ToArrayAsync();
 
         var autotests = await db.AutotestsStat
             .Where(assertion =>
-                assertion.ProjectId == project.Id &&
+                assertion.Project.Code == project.Code &&
                 assertion.Timestamp >= from &&
                 assertion.Timestamp < to)
+            .OrderBy(s => s.Timestamp)
             .ToArrayAsync();
 
         var model = new StatModel
