@@ -18,7 +18,7 @@ public class BulkWriterAssertion : BulkWriter
         string groupTitle,
         int groupOrder,
         string title,
-        int asserionOrder,
+        int assertionOrder,
         string? description,
         bool isAutomated)
     {
@@ -28,7 +28,7 @@ public class BulkWriterAssertion : BulkWriter
         await Writer.WriteAsync(groupTitle, NpgsqlDbType.Text);
         await Writer.WriteAsync(groupOrder, NpgsqlDbType.Integer);
         await Writer.WriteAsync(title, NpgsqlDbType.Text);
-        await Writer.WriteAsync(asserionOrder, NpgsqlDbType.Integer);
+        await Writer.WriteAsync(assertionOrder, NpgsqlDbType.Integer);
         await Writer.WriteAsync(description, NpgsqlDbType.Text);
         await Writer.WriteAsync(isAutomated, NpgsqlDbType.Boolean);
     }
