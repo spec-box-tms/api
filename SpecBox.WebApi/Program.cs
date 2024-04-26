@@ -12,9 +12,10 @@ string? cstring = builder.Configuration.GetConnectionString("default");
 builder.Services.AddDbContext<SpecBoxDbContext>(cfg => cfg.UseNpgsql(cstring));
 
 builder.Services.AddControllers()
-    .AddJsonOptions(option =>
+    .AddJsonOptions(opts =>
     {
-        option.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+        opts.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+        opts.JsonSerializerOptions.Converters.Add(new JsonDateTimeUTCConverter());
     });
 
 builder.Services.AddEndpointsApiExplorer();

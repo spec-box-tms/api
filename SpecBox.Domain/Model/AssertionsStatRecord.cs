@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using SpecBox.Domain.Lib;
 
 namespace SpecBox.Domain.Model;
 
@@ -11,6 +12,7 @@ public class AssertionsStatRecord
     
     public Project Project { get; set; } = null!;
 
+    [IsUtc]
     public DateTime Timestamp { get; set; }
     
     public int TotalCount { get; set; }

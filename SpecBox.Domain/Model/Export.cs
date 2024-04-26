@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using SpecBox.Domain.Lib;
 
 namespace SpecBox.Domain.Model;
 
@@ -11,5 +12,6 @@ public class Export
     
     public Project Project { get; set; } = null!;
 
+    [IsUtc]
     public DateTime Timestamp { get; set; }
 }

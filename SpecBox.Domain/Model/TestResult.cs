@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using SpecBox.Domain.Lib;
 
 namespace SpecBox.Domain.Model;
 
@@ -9,8 +10,11 @@ public class TestResult
 
   public string Status { get; set; } = null!;
   public string? Report { get; set; }
+  [IsUtc]
   public DateTime? StartedAt { get; set; }
+  [IsUtc]
   public DateTime? CompletedAt { get; set; }
+  [IsUtc]
   public DateTime UpdatedAt { get; set; }
   
   public Guid AssertionId { get; set; }
