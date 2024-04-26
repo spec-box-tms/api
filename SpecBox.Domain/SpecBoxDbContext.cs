@@ -42,7 +42,7 @@ public class SpecBoxDbContext : DbContext
     public async Task MergeExportedData(Guid exportId) => await ExecuteSQL("CALL \"MergeExportedData\"($1)", exportId);
 
     public DbSet<TestRun> TestRuns { get; set; } = null!;
-    
+
     public DbSet<TestResult> TestResults { get; set; } = null!;
 
     public async Task<NpgsqlConnection> GetConnection()
@@ -55,13 +55,14 @@ public class SpecBoxDbContext : DbContext
         {
             await connection.OpenAsync();
         }
-        
+
         return connection;
     }
 
-    private async Task ExecuteSQL(string commandText, params object[] args) {
+    private async Task ExecuteSQL(string commandText, params object[] args)
+    {
         var connection = await GetConnection();
-        
+
         await using var command = connection.CreateCommand();
         command.CommandText = commandText;
 
@@ -84,7 +85,7 @@ public class SpecBoxDbContext : DbContext
                 x => x.HasOne<AttributeValue>().WithMany().HasForeignKey(x => x.AttributeValueId),
                 x => x.HasOne<Feature>().WithMany().HasForeignKey(x => x.FeatureId)
             );
-        
+
         modelBuilder.ApplyUtcDateTimeConverter();
     }
 }

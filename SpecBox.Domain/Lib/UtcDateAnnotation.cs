@@ -9,7 +9,8 @@ namespace SpecBox.Domain.Lib;
 public static class UtcDateAnnotation
 {
     private const string IsUtcAnnotation = "IsUtc";
-    private static readonly ValueConverter<DateTime, DateTime> UtcConverter = new ValueConverter<DateTime, DateTime>(convertTo => DateTime.SpecifyKind(convertTo, DateTimeKind.Utc), convertFrom => convertFrom);
+    private static readonly ValueConverter<DateTime, DateTime> UtcConverter = 
+        new ValueConverter<DateTime, DateTime>(convertTo => DateTime.SpecifyKind(convertTo, DateTimeKind.Utc), convertFrom => convertFrom);
 
     public static PropertyBuilder<TProperty> IsUtc<TProperty>(this PropertyBuilder<TProperty> builder, bool isUtc = true) => builder.HasAnnotation(IsUtcAnnotation, isUtc);
 
@@ -50,6 +51,6 @@ public static class UtcDateAnnotation
 }
 public class IsUtcAttribute : Attribute
 {
-    public IsUtcAttribute(bool isUtc = true) => this.IsUtc = isUtc;
+    public IsUtcAttribute(bool isUtc = true) => IsUtc = isUtc;
     public bool IsUtc { get; }
 }

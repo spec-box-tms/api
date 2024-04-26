@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using SpecBox.Domain.Lib;
 
 namespace SpecBox.Domain.Model;
 
@@ -11,6 +12,8 @@ public class Project
     public string Title { get; set; } = null!;
     public string? Description { get; set; }
     public string? RepositoryUrl { get; set; }
+    [IsUtc]
     public DateTime? CreatedAt { get; set; }
+    [IsUtc]
     public DateTime? UpdatedAt { get; set; }
 }
