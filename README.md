@@ -3,7 +3,7 @@
 Этот репозиторий является частью [SpecBoxTMS](https://github.com/spec-box-tms)
 системы управления функциональными требованиями (УФТы!)
 
-В этом репозитории находится БД и веб-API для структурированного хранения информации о функциональных требованиях продукта. Приложение реализовано на C# (.NET7) и хранит данные в PostgreSQL.
+В этом репозитории находится БД и веб-API для структурированного хранения информации о функциональных требованиях продукта. Приложение реализовано на C# (.NET8) и хранит данные в PostgreSQL.
 
 ## Концепция системы
 
@@ -50,13 +50,13 @@
    dotnet tool install -g thinkinghome.migrator.cli
    
    # обновите структуру БД
-   migrate-database postgres "host=localhost;port=5432;database=tms;user name=postgres;password=123" ./SpecBox.Migrations/bin/Debug/net7.0/SpecBox.Migrations.dll
+   migrate-database postgres "host=localhost;port=5432;database=tms;user name=postgres;password=123" ./SpecBox.Migrations/bin/Debug/net8.0/SpecBox.Migrations.dll
    ```
 4. Запустите приложение
    ```shell
    export ASPNETCORE_ENVIRONMENT=Development
    export ConnectionStrings__default="host=localhost;port=5432;database=tms;user name=postgres;password=123"
-   dotnet ./SpecBox.WebApi/bin/Debug/net7.0/SpecBox.WebApi.dll --urls=http://+:8080
+   dotnet ./SpecBox.WebApi/bin/Debug/net8.0/SpecBox.WebApi.dll --urls=http://+:8080
    ```
 5. Откройте в браузере адрес http://localhost:8080/swagger
 
