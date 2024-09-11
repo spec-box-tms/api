@@ -8,6 +8,8 @@ using SpecBox.WebApi.Model;
 
 var builder = WebApplication.CreateBuilder(args);
 
+string allowCorsPolicy = "AllowAllOrigins";
+
 string? cstring = builder.Configuration.GetConnectionString("default");
 builder.Services.AddDbContext<SpecBoxDbContext>(cfg => cfg.UseNpgsql(cstring));
 
@@ -30,6 +32,16 @@ builder.Services.AddSwaggerGen(opts =>
     opts.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(allowCorsPolicy,
+        builder =>
+        {
+            builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        }
+    );
+});
+
 builder.Logging
     .ClearProviders()
     .AddConsole()
@@ -44,6 +56,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseCors(allowCorsPolicy);
 }
 
 app.Run();
