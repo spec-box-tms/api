@@ -4,7 +4,7 @@ using SpecBox.Domain.Lib;
 namespace SpecBox.Domain.Model;
 
 [Table("Project")]
-public class Project
+public class Project: ICreatedAt, IUpdatedAt
 {
     public Guid Id { get; set; }
     public string Code { get; set; } = null!;
@@ -13,7 +13,7 @@ public class Project
     public string? Description { get; set; }
     public string? RepositoryUrl { get; set; }
     [IsUtc]
-    public DateTime? CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
     [IsUtc]
-    public DateTime? UpdatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }
