@@ -4,7 +4,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="ThinkingHome.Migrator.Framework" Version="3.8.0" />
+        <PackageReference Include="ThinkingHome.Migrator.Framework" Version="3.8.1" />
+        <PackageReference Include="ThinkingHome.Migrator.Providers.PostgreSQL" Version="3.8.1" />
     </ItemGroup>
     <ItemGroup>
         <None Remove="Resources\**\*" />

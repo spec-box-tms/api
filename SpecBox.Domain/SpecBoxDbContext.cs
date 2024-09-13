@@ -8,7 +8,7 @@ using Npgsql;
 
 namespace SpecBox.Domain;
 
-public class SpecBoxDbContext : DbContext
+public partial class SpecBoxDbContext : DbContext
 {
     public SpecBoxDbContext(DbContextOptions<SpecBoxDbContext> options)
         : base(options)
