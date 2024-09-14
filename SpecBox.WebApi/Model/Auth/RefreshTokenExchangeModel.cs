@@ -4,6 +4,6 @@ namespace SpecBox.WebApi.Model.Auth;
 
 public class RefreshTokenExchangeModel
 {
-  [Required]
-  public string RefreshToken { get; set; } = null!;
+    [Required]
+    public string RefreshToken { get; set; } = null!;
 }
