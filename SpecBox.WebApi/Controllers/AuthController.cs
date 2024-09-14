@@ -30,8 +30,18 @@ public class AuthController : Controller
     /// </summary>
     [HttpPost("register", Name = "Register")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<AccessTokenModel>> Register([FromBody] UserRegisterModel request)
     {
+        if (await db.Users.AnyAsync(u => u.Login == request.Login))
+        {
+            return Conflict("Login is occupied");
+        }
+        if (await db.Users.AnyAsync(u => u.Email == request.Email))
+        {
+            return Conflict("Email is occupied");
+        }
+
         var salt = Guid.NewGuid();
 
         var identity = new UserIdentityModel
