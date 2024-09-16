@@ -17,6 +17,8 @@ string? cstring = builder.Configuration.GetConnectionString("default");
 
 builder.Services.AddDbContext<SpecBoxDbContext>(cfg => cfg.UseNpgsql(cstring));
 
+builder.Services.AddCors();
+
 builder.Services.AddControllers()
     .AddJsonOptions(opts =>
     {
@@ -78,6 +80,13 @@ builder.Logging
     .AddConsoleFormatter<ConsoleJsonFormatter, ConsoleFormatterOptions>();
 
 var app = builder.Build();
+
+app.UseCors(opts =>
+{
+    opts.AllowAnyOrigin();
+    opts.AllowAnyHeader();
+    opts.AllowAnyMethod();
+});
 
 app.MapControllers();
 
