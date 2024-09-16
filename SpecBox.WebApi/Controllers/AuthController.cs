@@ -35,11 +35,13 @@ public class AuthController : Controller
     {
         if (await db.Users.AnyAsync(u => u.Login == request.Login))
         {
-            return Conflict("Login is occupied");
+            ModelState.AddModelError(nameof(UserRegisterModel.Login), "Already exists");
+            return ValidationProblem();
         }
         if (await db.Users.AnyAsync(u => u.Email == request.Email))
         {
-            return Conflict("Email is occupied");
+            ModelState.AddModelError(nameof(UserRegisterModel.Email), "Already exists");
+            return ValidationProblem();
         }
 
         var salt = Guid.NewGuid();
@@ -92,12 +94,12 @@ public class AuthController : Controller
         var user = await db.Users.SingleOrDefaultAsync(user => user.Login.ToLower() == request.Login.ToLower());
 
         if (user == null)
-            return Forbid("Login Password pair not found");
+            return Unauthorized();
 
         var passwordAuth = await db.PasswordAuths.SingleOrDefaultAsync(p => p.UserId == user.Id);
 
         if (passwordAuth == null)
-            return Forbid("Login Password pair not found");
+            return Unauthorized();
 
         var identity = new UserIdentityModel
         {
@@ -110,7 +112,7 @@ public class AuthController : Controller
 
         if (result == PasswordVerificationResult.Failed)
         {
-            return Forbid("Login Password pair not found");
+            return Unauthorized();
         }
 
         return Json(await auth.CreateTokens(user));
@@ -122,7 +124,7 @@ public class AuthController : Controller
     [HttpPost("refresh", Name = "Refresh tokens")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<AccessTokenModel[]>> Refresh([FromBody] RefreshTokenExchangeModel request)
+    public async Task<ActionResult<AccessTokenModel>> Refresh([FromBody] RefreshTokenExchangeModel request)
     {
         try
         {

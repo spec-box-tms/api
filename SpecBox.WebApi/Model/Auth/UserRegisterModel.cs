@@ -6,10 +6,12 @@ public class UserRegisterModel
 {
     [Required]
     [MaxLength(255)]
+    [RegularExpression(@"^[a-zA-Z_]+[a-zA-Z\d-_]*$")]
     public string Login { get; set; } = null!;
 
     [Required]
     [MaxLength(255)]
+    [EmailAddress]
     public string Email { get; set; } = null!;
 
     [Required]

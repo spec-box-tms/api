@@ -35,17 +35,25 @@ public class AuthService
         SecurityToken securityToken;
         handler.ValidateToken(refreshToken, tokenValidationParams, out securityToken);
 
-        RemoveExpiredTokens();
+        await RemoveExpiredTokens();
 
         var existingToken = await db.RefreshTokens.Include(t => t.User)
-            .SingleOrDefaultAsync(t => t.Token == refreshToken);
+            .Where(t => t.Token == refreshToken).ToArrayAsync();
 
-        if (existingToken == null)
+        if (existingToken.Length == 0)
         {
             throw new Exception("Use of expired refresh token");
         }
 
-        return await CreateTokens(existingToken.User);
+        foreach (var token in existingToken)
+        {
+            if (!token.UsedAt.HasValue)
+                token.UsedAt = DateTime.UtcNow;
+        }
+
+        await db.SaveChangesAsync();
+
+        return await CreateTokens(existingToken[0].User);
     }
 
     public async Task<AccessTokenModel> CreateTokens(User user)
@@ -91,12 +99,12 @@ public class AuthService
         };
     }
 
-    private async void RemoveExpiredTokens()
+    private async Task RemoveExpiredTokens()
     {
         db.RefreshTokens.RemoveRange(
             db.RefreshTokens.Where(t =>
                 t.ExpireAt < DateTime.UtcNow ||
-                t.UsedAt < DateTime.UtcNow.AddSeconds(60)
+                t.UsedAt < DateTime.UtcNow.AddSeconds(-60)
             ));
         await db.SaveChangesAsync();
     }
