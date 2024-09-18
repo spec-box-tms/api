@@ -8,6 +8,6 @@ public class AuthProfile : Profile
 {
     public AuthProfile()
     {
-        CreateMap<User, UserModel>();
+        CreateMap<User, UserResponse>();
     }
 }

@@ -5,12 +5,14 @@ using SpecBox.Domain.Lib;
 using SpecBox.Domain.Model;
 using Attribute = SpecBox.Domain.Model.Attribute;
 using Npgsql;
+using SpecBox.Domain.Model.Teams;
+using SpecBox.Domain.Model.Users;
 
 namespace SpecBox.Domain;
 
 public partial class SpecBoxDbContext : DbContext
 {
-    public SpecBoxDbContext(DbContextOptions<SpecBoxDbContext> options)
+    public SpecBoxDbContext(DbContextOptions options)
         : base(options)
     {
     }
@@ -78,6 +80,8 @@ public partial class SpecBoxDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
         modelBuilder.Entity<Feature>()
             .HasMany(e => e.Attributes)
             .WithMany(e => e.Features)
@@ -86,6 +90,31 @@ public partial class SpecBoxDbContext : DbContext
                 x => x.HasOne<Feature>().WithMany().HasForeignKey(x => x.FeatureId)
             );
 
+        modelBuilder.Entity<Team>()
+            .HasMany(e => e.Users)
+            .WithMany(e => e.Teams)
+            .UsingEntity<TeamUser>(
+                x => x.HasOne<User>().WithMany().HasForeignKey(x => x.UserId),
+                x => x.HasOne<Team>().WithMany().HasForeignKey(x => x.TeamId)
+            );
+        
+        OnAuditableEntityCreating<Team>(modelBuilder);
+
         modelBuilder.ApplyUtcDateTimeConverter();
+    }
+
+    private void OnAuditableEntityCreating<TEntity>(ModelBuilder modelBuilder) where TEntity : BaseEntity {
+        modelBuilder.Entity<TEntity>()
+            .HasOne(e => e.CreatedBy)
+            .WithMany()
+            .HasForeignKey(x => x.CreatedById);
+        modelBuilder.Entity<TEntity>()
+            .HasOne(e => e.UpdatedBy)
+            .WithMany()
+            .HasForeignKey(x => x.UpdatedById);
+        modelBuilder.Entity<TEntity>()
+            .HasOne(e => e.DeletedBy)
+            .WithMany()
+            .HasForeignKey(x => x.DeletedById);
     }
 }

@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+namespace SpecBox.WebApi.Lib;
+
 public class JsonDateTimeUTCConverter : JsonConverter<DateTime>
 {
   public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

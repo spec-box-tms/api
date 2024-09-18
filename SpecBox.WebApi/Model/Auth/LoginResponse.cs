@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SpecBox.WebApi.Model.Auth;
 
-public class LoginModel
+public class LoginRequest
 {
     [Required]
     [MaxLength(255)]

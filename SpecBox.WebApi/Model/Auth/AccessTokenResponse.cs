@@ -2,8 +2,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SpecBox.WebApi.Model.Auth;
 
-public class RefreshTokenExchangeModel
+public class AccessTokenResponse
 {
+    [Required]
+    public string AccessToken { get; set; } = null!;
     [Required]
     public string RefreshToken { get; set; } = null!;
 }

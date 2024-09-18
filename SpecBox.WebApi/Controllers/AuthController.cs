@@ -2,7 +2,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SpecBox.Domain;
 using SpecBox.Domain.Model.Users;
 using SpecBox.WebApi.Model.Auth;
 using SpecBox.WebApi.Services;
@@ -10,49 +9,36 @@ using SpecBox.WebApi.Services;
 namespace SpecBox.WebApi.Controllers;
 
 [ApiController, Route("auth")]
-public class AuthController : Controller
+public class AuthController(ApplicationDbContext db, AuthService auth) : Controller
 {
-    private readonly SpecBoxDbContext db;
-    private readonly AuthService auth;
-    private readonly ILogger logger;
-    private readonly IMapper mapper;
-
-    public AuthController(SpecBoxDbContext db, AuthService auth, ILogger<ProjectController> logger, IMapper mapper)
-    {
-        this.db = db;
-        this.auth = auth;
-        this.logger = logger;
-        this.mapper = mapper;
-    }
-
     /// <summary>
     /// Регистрация новых пользователей
     /// </summary>
     [HttpPost("register", Name = "Register")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<ActionResult<AccessTokenModel>> Register([FromBody] UserRegisterModel request)
+    public async Task<ActionResult<AccessTokenResponse>> Register([FromBody] UserRegisterRequest request)
     {
         if (await db.Users.AnyAsync(u => u.Login == request.Login))
         {
-            ModelState.AddModelError(nameof(UserRegisterModel.Login), "Already exists");
+            ModelState.AddModelError(nameof(UserRegisterRequest.Login), "Already exists");
             return ValidationProblem();
         }
         if (await db.Users.AnyAsync(u => u.Email == request.Email))
         {
-            ModelState.AddModelError(nameof(UserRegisterModel.Email), "Already exists");
+            ModelState.AddModelError(nameof(UserRegisterRequest.Email), "Already exists");
             return ValidationProblem();
         }
 
         var salt = Guid.NewGuid();
 
-        var identity = new UserIdentityModel
+        var identity = new UserIdentity
         {
             Login = request.Login,
             Salt = salt
         };
 
-        var hasher = new PasswordHasher<UserIdentityModel>();
+        var hasher = new PasswordHasher<UserIdentity>();
         var hash = hasher.HashPassword(identity, request.Password);
 
         var user = new User
@@ -60,8 +46,6 @@ public class AuthController : Controller
             Login = request.Login,
             Email = request.Email,
             Name = request.Name,
-            UpdatedAt = DateTime.Now,
-            CreatedAt = DateTime.Now,
         };
 
         var passwordAuth = new PasswordAuth
@@ -89,7 +73,7 @@ public class AuthController : Controller
     [HttpPost("login", Name = "Login")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<AccessTokenModel>> Login([FromBody] LoginModel request)
+    public async Task<ActionResult<AccessTokenResponse>> Login([FromBody] LoginRequest request)
     {
         var user = await db.Users.SingleOrDefaultAsync(user => user.Login.ToLower() == request.Login.ToLower());
 
@@ -101,13 +85,13 @@ public class AuthController : Controller
         if (passwordAuth == null)
             return Unauthorized();
 
-        var identity = new UserIdentityModel
+        var identity = new UserIdentity
         {
             Login = user.Login,
             Salt = passwordAuth.Salt
         };
 
-        var hasher = new PasswordHasher<UserIdentityModel>();
+        var hasher = new PasswordHasher<UserIdentity>();
         var result = hasher.VerifyHashedPassword(identity, passwordAuth.Hash, request.Password);
 
         if (result == PasswordVerificationResult.Failed)
@@ -124,7 +108,7 @@ public class AuthController : Controller
     [HttpPost("refresh", Name = "Refresh tokens")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<AccessTokenModel>> Refresh([FromBody] RefreshTokenExchangeModel request)
+    public async Task<ActionResult<AccessTokenResponse>> Refresh([FromBody] RefreshTokenExchangeRequest request)
     {
         try
         {

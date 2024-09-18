@@ -4,22 +4,14 @@ using SpecBox.Domain;
 using SpecBox.Domain.BulkCopy;
 using SpecBox.Domain.Model;
 using SpecBox.WebApi.Model.Upload;
+using SpecBox.WebApi.Services;
 using Attribute = SpecBox.Domain.Model.Attribute;
 
 namespace SpecBox.WebApi.Controllers;
 
 [ApiController, Route("export")]
-public class ExportController : Controller
+public class ExportController(ApplicationDbContext db, ILogger<ExportController> logger) : Controller
 {
-    private readonly SpecBoxDbContext db;
-    private readonly ILogger logger;
-
-    public ExportController(SpecBoxDbContext db, ILogger<ExportController> logger)
-    {
-        this.db = db;
-        this.logger = logger;
-    }
-
     /// <summary>
     /// Uploads project data. If project with the same code and version exists, it will be updated.
     /// If project has test runs, it can't be updated.
