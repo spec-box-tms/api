@@ -9,8 +9,6 @@ public class Migration_017_UserAuth : Migration
 {
     public override void Apply()
     {
-        // CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
         Database.ExecuteNonQuery("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"");
 
         Database.AddTable("User",
@@ -40,7 +38,7 @@ public class Migration_017_UserAuth : Migration
         );
 
         Database.AddForeignKey("FK_PasswordAuth_UserId", "PasswordAuth", "UserId", "User", "Id");
-        Database.AddForeignKey("FK_RefreshToken_AUserId", "RefreshToken", "UserId", "User", "Id");
+        Database.AddForeignKey("FK_RefreshToken_UserId", "RefreshToken", "UserId", "User", "Id");
 
         Database.AddUniqueConstraint("UK_User_Login", "User", "Login");
         Database.AddUniqueConstraint("UK_User_Email", "User", "Email");

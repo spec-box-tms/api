@@ -1,27 +1,16 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SpecBox.Domain;
 using SpecBox.Domain.Model;
 using SpecBox.WebApi.Model.Common;
 using SpecBox.WebApi.Model.Project;
+using SpecBox.WebApi.Services;
 
 namespace SpecBox.WebApi.Controllers;
 
 [ApiController, Route("projects")]
-public class ProjectController : Controller
+public class ProjectController(ApplicationDbContext db, IMapper mapper) : Controller
 {
-    private readonly SpecBoxDbContext db;
-    private readonly ILogger logger;
-    private readonly IMapper mapper;
-
-    public ProjectController(SpecBoxDbContext db, ILogger<ProjectController> logger, IMapper mapper)
-    {
-        this.db = db;
-        this.logger = logger;
-        this.mapper = mapper;
-    }
-
     /// <summary>
     /// Returns the list of projects.
     /// </summary>

@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SpecBox.WebApi.Model.Auth;
 
-public class UserRegisterModel
+public class UserRegisterRequest
 {
     [Required]
     [MaxLength(255)]

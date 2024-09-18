@@ -6,30 +6,14 @@ using SpecBox.Domain;
 using SpecBox.Domain.Model;
 using SpecBox.WebApi.Model.Common;
 using SpecBox.WebApi.Model.TestRun;
+using SpecBox.WebApi.Services;
 
 namespace SpecBox.WebApi.Controllers;
 
 [ApiController]
 [Route("tests")]
-public class TestRunController : Controller
+public class TestRunController(ApplicationDbContext db, IMapper mapper) : Controller
 {
-    private readonly SpecBoxDbContext db;
-    private readonly ILogger logger;
-    private readonly IMapper mapper;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TestRunController"/> class.
-    /// </summary>
-    /// <param name="db">The instance used for accessing the database.</param>
-    /// <param name="logger">The instance used for logging.</param>
-    /// <param name="mapper">The instance used for mapping.</param>
-    public TestRunController(SpecBoxDbContext db, ILogger<TestRunController> logger, IMapper mapper)
-    {
-        this.db = db;
-        this.logger = logger;
-        this.mapper = mapper;
-    }
-
     /// <summary>
     /// Creates a new test run for the specified project.
     /// </summary>

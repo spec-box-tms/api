@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using SpecBox.Domain.Lib;
 
@@ -13,8 +12,6 @@ public class RefreshToken
 
     public User User { get; set; } = null!;
 
-    [Required]
-    [MaxLength(1000)]
     public string Token { get; set; } = null!;
 
     [IsUtc]

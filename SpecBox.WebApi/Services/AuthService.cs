@@ -5,23 +5,24 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SpecBox.Domain;
 using SpecBox.Domain.Model.Users;
+using SpecBox.WebApi.Lib;
 using SpecBox.WebApi.Model.Auth;
 
 namespace SpecBox.WebApi.Services;
 
 public class AuthService
 {
-    private readonly SpecBoxDbContext db;
+    private readonly ApplicationDbContext db;
     private readonly SymmetricSecurityKey privateKey;
 
-    public AuthService(SpecBoxDbContext db, IConfiguration configuration)
+    public AuthService(ApplicationDbContext db, IConfiguration configuration)
     {
         this.db = db;
         var privateKey = configuration["PrivateKey"] ?? "MySuperSecretPrivateKeyWithLengthMoreThan128bits";
         this.privateKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(privateKey));
     }
 
-    public async Task<AccessTokenModel> Exchange(string refreshToken)
+    public async Task<AccessTokenResponse> Exchange(string refreshToken)
     {
         var handler = new JwtSecurityTokenHandler();
 
@@ -56,7 +57,7 @@ public class AuthService
         return await CreateTokens(existingToken[0].User);
     }
 
-    public async Task<AccessTokenModel> CreateTokens(User user)
+    public async Task<AccessTokenResponse> CreateTokens(User user)
     {
         var handler = new JwtSecurityTokenHandler();
 
@@ -92,7 +93,7 @@ public class AuthService
 
         await db.SaveChangesAsync();
 
-        return new AccessTokenModel
+        return new AccessTokenResponse
         {
             AccessToken = accessTokenStr,
             RefreshToken = refreshTokenStr
@@ -114,6 +115,7 @@ public class AuthService
 
         ci.AddClaim(new Claim(ClaimTypes.Name, user.Login));
         ci.AddClaim(new Claim(ClaimTypes.Email, user.Email));
+        ci.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id.ToBase32Crockford()));
 
         return ci;
     }

@@ -1,27 +1,16 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SpecBox.Domain;
 using SpecBox.Domain.Model;
 using SpecBox.WebApi.Model.Common;
 using SpecBox.WebApi.Model.Stat;
+using SpecBox.WebApi.Services;
 
 namespace SpecBox.WebApi.Controllers;
 
 [ApiController, Route("stat")]
-public class StatController : Controller
+public class StatController(ApplicationDbContext db, IMapper mapper) : Controller
 {
-    private readonly SpecBoxDbContext db;
-    private readonly ILogger logger;
-    private readonly IMapper mapper;
-
-    public StatController(SpecBoxDbContext db, ILogger<StatController> logger, IMapper mapper)
-    {
-        this.db = db;
-        this.logger = logger;
-        this.mapper = mapper;
-    }
-
     [HttpPost("upload-autotests", Name = "AutotestsStatUpload")]
     public async Task<IActionResult> AutotestsStatUpload(
         [FromQuery(Name = "project")] string projectCode,
