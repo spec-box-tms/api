@@ -2,9 +2,9 @@ namespace SpecBox.WebApi.Lib;
 
 public static class Base32CrockfordDecoder
 {
-        private static readonly Dictionary<char, int> Base32CrockfordMap = new Dictionary<char, int>()
+    private static readonly Dictionary<char, int> Base32CrockfordMap = new Dictionary<char, int>()
     {
-        {'0', 0}, {'1', 1}, {'2', 2}, {'3', 3}, {'4', 4},
+        {'0', 0}, {'1', 1}, {'I', 1}, {'L', 1}, {'2', 2}, {'3', 3}, {'4', 4},
         {'5', 5}, {'6', 6}, {'7', 7}, {'8', 8}, {'9', 9},
         {'A', 10}, {'B', 11}, {'C', 12}, {'D', 13}, {'E', 14},
         {'F', 15}, {'G', 16}, {'H', 17}, {'J', 18}, {'K', 19},
@@ -12,14 +12,23 @@ public static class Base32CrockfordDecoder
         {'S', 25}, {'T', 26}, {'V', 27}, {'W', 28}, {'X', 29},
         {'Y', 30}, {'Z', 31}
     };
-    public static byte[] Decode(string base32)
+    public static byte[] Decode(string base32, bool verifyChecksum = false)
     {
-        Console.WriteLine(base32);
+        if (base32 == null) throw new ArgumentNullException(nameof(base32));
+
+        if (base32.Length == 0)
+            return [];
+
         base32 = base32.ToUpper();
-        base32 = base32.TrimEnd('=');
+        
+        var checksum = base32.Last();
+        if (verifyChecksum)
+        {
+            base32 = base32.Substring(0, base32.Length - 1);
+        }
 
         var byteCount = base32.Length * 5 / 8;
-        var returnArray = new byte[byteCount];
+        var buffer = new byte[byteCount];
 
         int bitsRemaining = 0, currentByte = 0;
         int index = 0;
@@ -31,35 +40,40 @@ public static class Base32CrockfordDecoder
 
             int value = Base32CrockfordMap[c];
 
-            if (bitsRemaining > 3)
+            currentByte = (currentByte << 5) | value;
+            bitsRemaining += 5;
+
+            if (bitsRemaining >= 8)
             {
-                currentByte = (currentByte << 5) | value;
-                bitsRemaining -= 5;
-            }
-            else
-            {
-                currentByte = (currentByte << bitsRemaining) | (value >> (5 - bitsRemaining));
-                returnArray[index++] = (byte)currentByte;
-                currentByte = value & ((1 << (5 - bitsRemaining)) - 1);
-                bitsRemaining += 3;
+                buffer[index++] = (byte)(currentByte >> (bitsRemaining - 8));
+                bitsRemaining -= 8;
             }
         }
 
         if (index != byteCount)
-            returnArray[index] = (byte)(currentByte << (8 - bitsRemaining));
+            buffer[index] = (byte)(currentByte << (8 - bitsRemaining));
 
-        return returnArray;
+        if (verifyChecksum)
+        {
+            var computedChecksum = Base32CrockfordEncoder.CheckSum(buffer);
+            if (checksum != computedChecksum)
+            {
+                throw new Exception("Checksum verification error");
+            }
+        }
+
+        return buffer;
     }
 
-    public static byte[] FromBase32Crockford(this string base32)
+    public static byte[] FromBase32Crockford(this string base32, bool verifyChecksum = false)
     {
-        return Decode(base32);
+        return Decode(base32, verifyChecksum);
     }
 
-    public static Guid FromBase32CrockfordGuid(this string base32)
+    public static Guid FromBase32CrockfordGuid(this string base32, bool verifyChecksum = false)
     {
-        var buf = Decode(base32);
-        if(buf.Length != 128) 
+        var buf = Decode(base32, verifyChecksum);
+        if (buf.Length != 16)
         {
             throw new ArgumentException("Invalid Guid size in Base32");
         }

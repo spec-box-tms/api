@@ -17,11 +17,11 @@ public class JsonGuidCrockfordConverter : JsonConverter<Guid>
       throw new JsonException();
     }
 
-    return value.FromBase32CrockfordGuid();
+    return value.FromBase32CrockfordGuid(true);
   }
 
   public override void Write(Utf8JsonWriter writer, Guid value, JsonSerializerOptions options)
   {
-    writer.WriteStringValue(value.ToBase32Crockford());
+    writer.WriteStringValue(value.ToBase32Crockford(true));
   }
 }

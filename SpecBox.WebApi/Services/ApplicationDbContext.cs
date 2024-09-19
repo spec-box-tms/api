@@ -1,8 +1,6 @@
-using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using SpecBox.Domain;
 using SpecBox.Domain.Lib;
-using SpecBox.WebApi.Services;
 
 namespace SpecBox.WebApi.Services;
 
@@ -28,11 +26,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         if (entity is IDeletedBy)
         {
             var userId = currentUserService.GetUserId();
-            if (!userId.HasValue)
-            {
-                throw new Exception("User GUID not found in claims.");
-            }
-            ((IDeletedBy)entity).DeletedById = userId.Value;
+            ((IDeletedBy)entity).DeletedById = userId;
         }
         entity.DeletedAt = DateTime.UtcNow;
     }
@@ -40,7 +34,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public void ApplyAuditInformation()
     {
         var createdEntries = ChangeTracker.Entries().Where(e => e.State == EntityState.Added);
-        var userId = currentUserService.GetUserId();
         foreach (var entry in createdEntries)
         {
             var entity = entry.Entity;
@@ -50,11 +43,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             }
             if (entity is ICreatedBy && ((ICreatedBy)entity).CreatedBy == null)
             {
-                if (!userId.HasValue)
-                {
-                    throw new Exception("User GUID not found in claims.");
-                }
-                ((ICreatedBy)entity).CreatedById = userId.Value;
+                ((ICreatedBy)entity).CreatedById = currentUserService.GetUserId();
             }
             if (entity is IUpdatedAt)
             {
@@ -62,11 +51,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             }
             if (entity is IUpdatedBy)
             {
-                if (!userId.HasValue)
-                {
-                    throw new Exception("User GUID not found in claims.");
-                }
-                ((IUpdatedBy)entity).UpdatedById = userId.Value;
+                ((IUpdatedBy)entity).UpdatedById = currentUserService.GetUserId();
             }
         }
         var updatedEntries = ChangeTracker.Entries().Where(e => e.State == EntityState.Modified);
@@ -84,11 +69,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             }
             if (entity is IUpdatedBy)
             {
-                if (!userId.HasValue)
-                {
-                    throw new Exception("User GUID not found in claims.");
-                }
-                ((IUpdatedBy)entity).UpdatedById = userId.Value;
+                ((IUpdatedBy)entity).UpdatedById = currentUserService.GetUserId();
             }
         }
     }
