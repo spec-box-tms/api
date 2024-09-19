@@ -4,37 +4,49 @@ namespace SpecBox.WebApi.Lib;
 
 public static class Base32CrockfordEncoder
 {
-    private static readonly char[] CrockfordBase32Chars = "0123456789ABCDEFGHJKMNPQRSTVWXYZ".ToCharArray();
-    public static string Encode(byte[] data)
+    private static readonly char[] CrockfordBase37Chars = "0123456789ABCDEFGHJKMNPQRSTVWXYZ*~#=U".ToCharArray();
+    public static string Encode(byte[] data, bool appendChecksum = false)
     {
         StringBuilder result = new StringBuilder((data.Length * 8 + 4) / 5);
 
-        int currentByte = 0, bitsRemaining = 8, index = 0;
+        int currentByte = 0, bitsRemaining = 0, index = 0;
 
-        while (index < data.Length)
+        while (index < data.Length || bitsRemaining > 5)
         {
-            if (bitsRemaining > 5)
+            if (bitsRemaining < 5)
             {
-                currentByte = (currentByte << 8) | (data[index++] & 0xff);
-                bitsRemaining -= 8;
+                currentByte = (currentByte << 8) | data[index++];
+                bitsRemaining += 8;
             }
-
-            result.Append(CrockfordBase32Chars[(currentByte >> bitsRemaining) & 0x1f]);
-            bitsRemaining += 5;
+            bitsRemaining -= 5;
+            result.Append(CrockfordBase37Chars[(currentByte >> bitsRemaining) & 0x1f]);
         }
 
-        if (bitsRemaining > 0 && bitsRemaining < 8)
+        if (bitsRemaining > 0)
         {
-            result.Append(CrockfordBase32Chars[(currentByte << (5 - bitsRemaining)) & 0x1f]);
+            result.Append(CrockfordBase37Chars[(currentByte << (5 - bitsRemaining)) & 0x1f]);
+        }
+        if(appendChecksum) {
+            result.Append(CheckSum(data));
         }
 
         return result.ToString();
     }
 
-
-
-    public static string ToBase32Crockford(this Guid guid)
+    public static char CheckSum(byte[] data)
     {
-        return Base32CrockfordEncoder.Encode(guid.ToByteArray());
+        int checksum = 0;
+
+        foreach (byte b in data)
+        {
+            checksum = (checksum * 256 + b) % 37;
+        }
+
+        return CrockfordBase37Chars[checksum];
+    }
+
+    public static string ToBase32Crockford(this Guid guid, bool appendChecksum = false)
+    {
+        return Encode(guid.ToByteArray(), appendChecksum);
     }
 }

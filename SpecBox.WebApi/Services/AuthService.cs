@@ -115,7 +115,7 @@ public class AuthService
 
         ci.AddClaim(new Claim(ClaimTypes.Name, user.Login));
         ci.AddClaim(new Claim(ClaimTypes.Email, user.Email));
-        ci.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id.ToBase32Crockford()));
+        ci.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id.ToBase32Crockford(true)));
 
         return ci;
     }
