@@ -20,7 +20,7 @@ public static class Base32CrockfordDecoder
             return [];
 
         base32 = base32.ToUpper();
-        
+
         var checksum = base32.Last();
         if (verifyChecksum)
         {
@@ -78,5 +78,32 @@ public static class Base32CrockfordDecoder
             throw new ArgumentException("Invalid Guid size in Base32");
         }
         return new Guid(buf);
+    }
+
+    public static bool TryParse(string value, out Guid result, bool verifyChecksum)
+    {
+        try
+        {
+            result = value.FromBase32CrockfordGuid(verifyChecksum);
+            return true;
+        }
+        catch
+        {
+            result = Guid.Empty;
+            return false;
+        }
+    }
+    public static bool TryParse(string value, out byte[] result, bool verifyChecksum)
+    {
+        try
+        {
+            result = value.FromBase32Crockford(verifyChecksum);
+            return true;
+        }
+        catch
+        {
+            result = [];
+            return false;
+        }
     }
 }

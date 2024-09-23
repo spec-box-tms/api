@@ -16,6 +16,7 @@ public class AuthController(ApplicationDbContext db, AuthService auth) : Control
     /// </summary>
     [HttpPost("register", Name = "Register")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<AccessTokenResponse>> Register([FromBody] UserRegisterRequest request)
     {

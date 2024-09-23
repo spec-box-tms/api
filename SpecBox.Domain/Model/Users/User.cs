@@ -5,7 +5,7 @@ using SpecBox.Domain.Model.Teams;
 namespace SpecBox.Domain.Model.Users;
 
 [Table("User")]
-public class User : ICreatedAt, IUpdatedAt
+public class User : ICreatedAt, IUpdatedAt, IConcurrencyControl
 {
     public Guid Id { get; set; }
     public required string Login { get; set; } = null!;
@@ -13,10 +13,7 @@ public class User : ICreatedAt, IUpdatedAt
     public required string Name { get; set; } = null!;
     public string? Description { get; set; }
 
-    [IsUtc]
     public DateTime CreatedAt { get; set; }
-    [IsUtc]
     public DateTime UpdatedAt { get; set; }
-
-    public List<Team> Teams { get; set; } = [];
+    public Guid RowVersion { get; set; }
 }

@@ -12,7 +12,6 @@ public class AutotestsStatRecord
     
     public Project Project { get; set; } = null!;
 
-    [IsUtc]
     public DateTime Timestamp { get; set; }
 
     public int Duration { get; set; }

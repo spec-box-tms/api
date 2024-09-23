@@ -25,6 +25,5 @@ public static class AddAuditableEntityExtensions
         database.AddForeignKey($"FK_{name.Name}_CreatedById", name, "CreatedById", "User", "Id");
         database.AddForeignKey($"FK_{name.Name}_UpdatedById", name, "UpdatedById", "User", "Id");
         database.AddForeignKey($"FK_{name.Name}_DeletedById", name, "DeletedById", "User", "Id");
-
     }
 }

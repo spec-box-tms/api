@@ -5,6 +5,9 @@ namespace SpecBox.WebApi.Model.Auth;
 public class UserResponse
 {
     [Required]
+    public string Id { get; set; } = null!;
+
+    [Required]
     public string Login { get; set; } = null!;
 
     [Required]

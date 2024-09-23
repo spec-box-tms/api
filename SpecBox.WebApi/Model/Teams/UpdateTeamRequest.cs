@@ -1,15 +1,16 @@
 
 using System.ComponentModel.DataAnnotations;
+using SpecBox.Domain.Lib;
 
 namespace SpecBox.WebApi.Model.Teams;
 
-public class CreateTeamRequest
+public class UpdateTeamRequest : IConcurrencyControl
 {
-    [Required]
     [MaxLength(100)]
     [MinLength(2)]
-    public string Title { get; set; } = null!;
-
+    public string? Title { get; set; }
     [MaxLength(1000)]
     public string? Description { get; set; }
+    [Required]
+    public Guid RowVersion { get; set; }
 }

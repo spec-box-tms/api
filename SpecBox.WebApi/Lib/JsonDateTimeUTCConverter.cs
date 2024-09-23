@@ -17,11 +17,11 @@ public class JsonDateTimeUTCConverter : JsonConverter<DateTime>
       throw new JsonException();
     }
 
-    return DateTime.Parse(value);
+    return DateTime.Parse(value).ToUniversalTime();
   }
 
   public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
   {
-    writer.WriteStringValue(value.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ"));
+    writer.WriteStringValue(value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"));
   }
 }
