@@ -12,6 +12,5 @@ public class Export
     
     public Project Project { get; set; } = null!;
 
-    [IsUtc]
     public DateTime Timestamp { get; set; }
 }

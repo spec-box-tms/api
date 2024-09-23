@@ -9,5 +9,6 @@ public class TeamProfile : Profile
     public TeamProfile()
     {
         CreateMap<Team, TeamResponse>();
+        CreateMap<TeamUser, TeamUserResponse>();
     }
 }

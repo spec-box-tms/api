@@ -12,7 +12,6 @@ public class AssertionsStatRecord
     
     public Project Project { get; set; } = null!;
 
-    [IsUtc]
     public DateTime Timestamp { get; set; }
     
     public int TotalCount { get; set; }

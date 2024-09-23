@@ -6,15 +6,15 @@ namespace SpecBox.WebApi.Services;
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, CurrentUserService currentUserService) : SpecBoxDbContext(options)
 {
-    public override int SaveChanges()
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
         ApplyAuditInformation();
-        return base.SaveChanges();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
     }
-    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
         ApplyAuditInformation();
-        return await base.SaveChangesAsync(cancellationToken);
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 
     public void SoftDelete<TEntity>(TEntity entity) where TEntity : IDeletedAt
@@ -37,39 +37,35 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         foreach (var entry in createdEntries)
         {
             var entity = entry.Entity;
-            if (entity is ICreatedAt && ((ICreatedAt)entity).CreatedAt == default)
+            if (entity is ICreatedAt createdAtEntity && createdAtEntity.CreatedAt == default)
             {
-                ((ICreatedAt)entity).CreatedAt = DateTime.UtcNow;
+                createdAtEntity.CreatedAt = DateTime.UtcNow;
             }
-            if (entity is ICreatedBy && ((ICreatedBy)entity).CreatedBy == null)
+            if (entity is ICreatedBy  createdByEntity && createdByEntity.CreatedBy == null)
             {
-                ((ICreatedBy)entity).CreatedById = currentUserService.GetUserId();
+                createdByEntity.CreatedById = currentUserService.GetUserId();
             }
-            if (entity is IUpdatedAt)
+            if (entity is IUpdatedAt updatedAtEntity)
             {
-                ((IUpdatedAt)entity).UpdatedAt = DateTime.UtcNow;
+                updatedAtEntity.UpdatedAt = DateTime.UtcNow;
             }
-            if (entity is IUpdatedBy)
+            if (entity is IUpdatedBy updatedByEntity)
             {
-                ((IUpdatedBy)entity).UpdatedById = currentUserService.GetUserId();
+                updatedByEntity.UpdatedById = currentUserService.GetUserId();
             }
         }
         var updatedEntries = ChangeTracker.Entries().Where(e => e.State == EntityState.Modified);
         foreach (var entry in updatedEntries)
         {
             var entity = entry.Entity;
-            if (entity is IDeletedAt && ((IDeletedAt)entity).DeletedAt.HasValue)
+            
+            if (entity is IUpdatedAt updatedAtEntity)
             {
-                continue;
+                updatedAtEntity.UpdatedAt = DateTime.UtcNow;
             }
-
-            if (entity is IUpdatedAt)
+            if (entity is IUpdatedBy updatedByEntity)
             {
-                ((IUpdatedAt)entity).UpdatedAt = DateTime.UtcNow;
-            }
-            if (entity is IUpdatedBy)
-            {
-                ((IUpdatedBy)entity).UpdatedById = currentUserService.GetUserId();
+                updatedByEntity.UpdatedById = currentUserService.GetUserId();
             }
         }
     }

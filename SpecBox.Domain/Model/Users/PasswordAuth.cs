@@ -13,6 +13,5 @@ public class PasswordAuth : IUpdatedAt
     public required string Hash { get; set; } = null!;
     public required Guid Salt { get; set; }
 
-    [IsUtc]
     public required DateTime UpdatedAt { get; set; }
 }

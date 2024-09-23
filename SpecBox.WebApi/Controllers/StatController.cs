@@ -12,6 +12,8 @@ namespace SpecBox.WebApi.Controllers;
 public class StatController(ApplicationDbContext db, IMapper mapper) : Controller
 {
     [HttpPost("upload-autotests", Name = "AutotestsStatUpload")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> AutotestsStatUpload(
         [FromQuery(Name = "project")] string projectCode,
         [FromBody] AutotestsStatUploadData data,

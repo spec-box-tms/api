@@ -12,7 +12,6 @@ public class Migration_018_Team : Migration
     {
         Database.AddAuditableEntity("Team",
           new Column("Id", DbType.Guid, ColumnProperty.PrimaryKey, "uuid_generate_v5(uuid_ns_oid(), 'Team')"),
-          new Column("Code", DbType.String.WithSize(255), ColumnProperty.NotNull),
           new Column("Title", DbType.String.WithSize(255), ColumnProperty.NotNull),
           new Column("Description", DbType.String.WithSize(1000), ColumnProperty.Null)
         );

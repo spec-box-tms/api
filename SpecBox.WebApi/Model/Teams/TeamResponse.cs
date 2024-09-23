@@ -1,20 +1,26 @@
 
 using System.ComponentModel.DataAnnotations;
-using SpecBox.WebApi.Model.Auth;
+using SpecBox.Domain.Lib;
 
 namespace SpecBox.WebApi.Model.Teams;
 
-public class TeamResponse
+public class TeamResponse : IConcurrencyControl
 {
-    public Guid Id { get; set; }
-
     [Required]
-    public string Code { get; set; } = null!;
-
+    public Guid Id { get; set; }
     [Required]
     public string Title { get; set; } = null!;
-
     public string? Description { get; set; }
-
-    public List<UserResponse> Users { get; set; } = [];
+    [Required]
+    public DateTime CreatedAt { get; set; }
+    [Required]
+    public Guid CreatedById { get; set; }
+    [Required]
+    public DateTime UpdatedAt { get; set; }
+    [Required]
+    public Guid UpdatedById { get; set; }
+    public DateTime? DeletedAt { get; set; }
+    public Guid? DeletedById { get; set; }
+    [Required]
+    public Guid RowVersion { get; set; }
 }

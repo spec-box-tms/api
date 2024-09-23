@@ -33,6 +33,8 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddTransient<CurrentUserService>();
 builder.Services.AddTransient<AuthService>();
+builder.Services.AddTransient<TeamService>();
+builder.Services.AddTransient<TeamUserService>();
 
 builder.Services.AddAuthentication(opts =>
 {

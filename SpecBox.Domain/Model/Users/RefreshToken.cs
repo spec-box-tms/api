@@ -14,9 +14,7 @@ public class RefreshToken
 
     public string Token { get; set; } = null!;
 
-    [IsUtc]
     public DateTime ExpireAt { get; set; }
 
-    [IsUtc]
     public DateTime? UsedAt { get; set; } = null;
 }

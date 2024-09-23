@@ -12,8 +12,6 @@ public class Project: ICreatedAt, IUpdatedAt
     public string Title { get; set; } = null!;
     public string? Description { get; set; }
     public string? RepositoryUrl { get; set; }
-    [IsUtc]
     public DateTime CreatedAt { get; set; }
-    [IsUtc]
     public DateTime UpdatedAt { get; set; }
 }

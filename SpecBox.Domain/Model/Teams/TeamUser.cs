@@ -1,6 +1,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using SpecBox.Domain.Model.Users;
 
 namespace SpecBox.Domain.Model.Teams;
 
@@ -12,4 +13,7 @@ public class TeamUser
     public Guid TeamId { get; set; }
     public Guid UserId { get; set; }
     public bool IsAdmin { get; set; }
+
+    public required User User { get; set; } = null!;
+    public required Team Team { get; set; } = null!;
 }
