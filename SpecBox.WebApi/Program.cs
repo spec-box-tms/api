@@ -55,7 +55,7 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddAutoMapper(cfg => {
     cfg.AddProfile<ProjectProfile>();
-    cfg.AddProfile<AuthProfile>();
+    cfg.AddProfile<UsersProfile>();
     cfg.AddProfile<TeamProfile>();
 });
 

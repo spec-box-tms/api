@@ -1,8 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using SpecBox.Domain.Lib;
 
-namespace SpecBox.WebApi.Model.Auth;
+namespace SpecBox.WebApi.Model.Users;
 
-public class UserResponse
+public class UserResponse : IConcurrencyControl
 {
     [Required]
     public string Id { get; set; } = null!;
@@ -23,4 +24,6 @@ public class UserResponse
 
     [Required]
     public DateTime UpdatedAt { get; set; }
+    [Required]
+    public Guid RowVersion { get; set; }
 }
