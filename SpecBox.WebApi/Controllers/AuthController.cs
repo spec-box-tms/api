@@ -1,4 +1,3 @@
-using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -22,12 +21,12 @@ public class AuthController(ApplicationDbContext db, AuthService auth) : Control
     {
         if (await db.Users.AnyAsync(u => u.Login == request.Login))
         {
-            ModelState.AddModelError(nameof(UserRegisterRequest.Login), "Already exists");
+            ModelState.AddModelError(nameof(UserRegisterRequest.Login), "Login already exists");
             return ValidationProblem();
         }
         if (await db.Users.AnyAsync(u => u.Email == request.Email))
         {
-            ModelState.AddModelError(nameof(UserRegisterRequest.Email), "Already exists");
+            ModelState.AddModelError(nameof(UserRegisterRequest.Email), "Email already exists");
             return ValidationProblem();
         }
 

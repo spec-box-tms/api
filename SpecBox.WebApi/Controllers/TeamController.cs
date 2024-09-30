@@ -32,6 +32,26 @@ public class TeamController(TeamService teamService, TeamUserService teamUserSer
     }
 
     /// <summary>
+    /// Получить информацию о команде
+    /// </summary>
+    [HttpGet("{id}", Name = "GetTeam")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<TeamResponse>> Get(string id)
+    {
+        var team = await teamService.GetTeamByIdAsync(id);
+
+        if (team == null)
+            return NotFound();
+
+        if (!await teamUserService.IsCurrentUserTeamMemberAsync(team.Id))
+            return Forbid();
+
+        return Json(mapper.Map<TeamResponse>(team));
+    }
+
+    /// <summary>
     /// Создать команду
     /// </summary>
     [HttpPost(Name = "CreateTeam")]

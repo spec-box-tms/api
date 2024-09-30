@@ -18,7 +18,8 @@ public class Migration_017_UserAuth : Migration
           new Column("Name", DbType.String.WithSize(255), ColumnProperty.NotNull),
           new Column("Description", DbType.String.WithSize(1000), ColumnProperty.Null),
           new Column("CreatedAt", DbType.DateTime.WithSize(3), ColumnProperty.NotNull),
-          new Column("UpdatedAt", DbType.DateTime.WithSize(3), ColumnProperty.NotNull)
+          new Column("UpdatedAt", DbType.DateTime.WithSize(3), ColumnProperty.NotNull),
+          new Column("RowVersion", DbType.Guid, ColumnProperty.NotNull, "gen_random_uuid()")
         );
 
         Database.AddTable("PasswordAuth",

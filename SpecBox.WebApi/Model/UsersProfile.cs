@@ -1,12 +1,12 @@
 using AutoMapper;
 using SpecBox.Domain.Model.Users;
-using SpecBox.WebApi.Model.Auth;
+using SpecBox.WebApi.Model.Users;
 
 namespace SpecBox.WebApi.Model;
 
-public class AuthProfile : Profile
+public class UsersProfile : Profile
 {
-    public AuthProfile()
+    public UsersProfile()
     {
         CreateMap<User, UserResponse>();
     }
