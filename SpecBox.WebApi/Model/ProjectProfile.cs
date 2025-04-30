@@ -2,6 +2,7 @@ using AutoMapper;
 using SpecBox.Domain.Model;
 using SpecBox.WebApi.Model.Common;
 using SpecBox.WebApi.Model.Project;
+using SpecBox.WebApi.Model.Project.Feature;
 using SpecBox.WebApi.Model.Stat;
 
 namespace SpecBox.WebApi.Model;
@@ -13,10 +14,12 @@ public class ProjectProfile : Profile
         CreateMap<Assertion, AssertionModel>();
         CreateMap<AssertionGroup, AssertionGroupModel>();
         CreateMap<Feature, FeatureModel>();
+        CreateMap<Feature, FeatureResponse>();
         CreateMap<AutotestsStatRecord, AutotestsStatModel>();
         CreateMap<AssertionsStatRecord, AssertionsStatModel>();
         CreateMap<Domain.Model.Project, ProjectVersionModel>();
         CreateMap<AttributeValue, AttributeValueModel>();
         CreateMap<SpecBox.Domain.Model.Attribute, AttributeModel>();
+
     }
 }

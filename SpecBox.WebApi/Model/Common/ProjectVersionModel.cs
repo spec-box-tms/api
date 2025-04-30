@@ -8,7 +8,7 @@ public class ProjectVersionModel
     [Required] public string Title { get; set; } = null!;
     public string? Description { get; set; }
     public string? RepositoryUrl { get; set; }
-    public string? Version { get; set; }
+    [Required] public string Version { get; set; } = null!;
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 

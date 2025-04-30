@@ -18,12 +18,12 @@ public class ExportController(ApplicationDbContext db, ILogger<ExportController>
     /// </summary>
     /// <param name="project">The project code</param>
     /// <param name="version">Optional project version</param>
-    /// <param name="data">Data to be upladed</param>
+    /// <param name="data">Data to be updated</param>
     /// <returns></returns>
-    [HttpPost("upload/{project}")]
+    [HttpPost("upload/{project}/versions/{version}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Upload(string project, [FromQuery(Name = "version")] string? version,
+    public async Task<IActionResult> Upload(string project, string version,
         [FromBody] UploadData data)
     {
         await using var tran = await db.Database.BeginTransactionAsync();

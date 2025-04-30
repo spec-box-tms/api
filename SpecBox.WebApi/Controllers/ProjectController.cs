@@ -16,11 +16,11 @@ public class ProjectController(ApplicationDbContext db, IMapper mapper) : Contro
     /// </summary>
     [HttpGet(Name = "ListProjects")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<ProjectModel[]>> Projects()
+    public async Task<ActionResult<ProjectResponse[]>> Projects()
     {
         var projects = await db.Projects.ToArrayAsync();
 
-        var projectsGrouped = projects.GroupBy(p => p.Code).Select(g => new ProjectModel
+        var projectsGrouped = projects.GroupBy(p => p.Code).Select(g => new ProjectResponse
         {
             Code = g.Key,
             Title = g.First().Title,
@@ -37,35 +37,33 @@ public class ProjectController(ApplicationDbContext db, IMapper mapper) : Contro
     }
 
     /// <summary>
-    /// Returns the feature details.
+    /// Получить детали проекта и версий
     /// </summary>
-    /// <param name="project">The project code.</param>
-    /// <param name="feature">The feature code.</param>
-    /// <param name="version">The project version. Default version if not provided.</param>
-    /// <returns>An 200 SUCCESS representing the HTTP response.</returns>
-    [HttpGet("{project}/features/{feature}", Name = "GetFeature")]
+    [HttpGet("{code}", Name = "GetProject")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<FeatureModel>> Feature(string project, string feature, [FromQuery(Name = "version")] string? version)
+    public async Task<ActionResult<ProjectResponse>> GetProject(string code)
     {
-        try
-        {
-            var f = await db.Features
-                .Include(f => f.AssertionGroups)
-                .ThenInclude(g => g.Assertions)
-                .Include(f => f.Attributes)
-                .ThenInclude(a => a.Attribute)
-                .SingleOrDefaultAsync(f => f.Code == feature && f.Project.Code == project && f.Project.Version == version);
-            if (f == null) return NotFound();
+        var projectVersions = await db.Projects.Where(p => p.Code == code).ToArrayAsync();
 
-            var model = mapper.Map<FeatureModel>(f);
+        if(projectVersions.Length == 0) {
+            return NotFound();
+        }
 
-            return Json(model);
-        }
-        catch (InvalidOperationException)
+        var projectsGrouped = projectVersions.GroupBy(p => p.Code).Select(g => new ProjectResponse
         {
-            return Problem("Feature duplicate found", "Feature", StatusCodes.Status500InternalServerError);
-        }
+            Code = g.Key,
+            Title = g.First().Title,
+            Description = g.First().Description,
+            RepositoryUrl = g.First().RepositoryUrl,
+            Versions = g.Select(p => new VersionModel
+            {
+                Version = p.Version,
+                UpdatedAt = p.UpdatedAt
+            }).ToArray()
+        }).ToArray();
+
+        return Json(projectsGrouped[0]);
     }
 
     /// <summary>
@@ -74,10 +72,11 @@ public class ProjectController(ApplicationDbContext db, IMapper mapper) : Contro
     /// <param name="project">The project code.</param>
     /// <param name="version">The project version. Default version if not provided.</param>
     /// <returns>An array of FeatureModel objects representing the retrieved project features.</returns>
-    [HttpGet("{project}/structures:plain", Name = "GetStructurePlain")]
+    [Obsolete("Этот метод будет удален, вместо него использовать GET:projects/{projectCode}/features")]
+    [HttpGet("{project}/versions/{version}/structures:plain", Name = "GetStructurePlain")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<StructureModel>> StructurePlain(string project, [FromQuery(Name = "version")] string? version)
+    public async Task<ActionResult<StructureModel>> StructurePlain(string project, string version)
     {
         var prj = await db.Projects.FirstOrDefaultAsync(p => p.Code == project && p.Version == version);
         if (prj == null) return NotFound();
@@ -96,71 +95,15 @@ public class ProjectController(ApplicationDbContext db, IMapper mapper) : Contro
     }
 
     /// <summary>
-    /// Returns the list of structures for a specific project.
-    /// </summary>
-    /// <param name="project">The project code.</param>
-    /// <param name="version">The project version. Default version if not provided.</param>
-    /// <returns>An array of TreeModel objects representing the retrieved project structures.</returns>
-    [HttpGet("{project}/structures", Name = "ListStructures")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<TreeModel[]>> ListStructures(string project, [FromQuery(Name = "version")] string? version)
-    {
-        var prj = await db.Projects.FirstOrDefaultAsync(p => p.Code == project && p.Version == version);
-        if (prj == null) return NotFound();
-
-        var trees = await db.Trees.Where(t => t.ProjectId == prj.Id).Select((tree) => new TreeModel
-        {
-            Code = tree.Code,
-            Title = tree.Title
-        }).ToArrayAsync();
-
-        if (trees.Length == 0) Json(new TreeModel[0]);
-
-        return Json(trees);
-    }
-
-    /// <summary>
-    /// Returns the structure details.
-    /// </summary>
-    /// <param name="project">The project code.</param>
-    /// <param name="treeCode">The tree code.</param>
-    /// <param name="version">The project version. Default version if not provided.</param>
-    /// <returns>The tree structure of retrived project tree.</returns>
-    [HttpGet("{project}/structures/{treeCode}", Name = "GetStructure")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<StructureModel>> Structure(string project, string treeCode, [FromQuery(Name = "version")] string? version)
-    {
-        var prj = await db.Projects.FirstOrDefaultAsync(p => p.Code == project && p.Version == version);
-        if (prj == null) return NotFound();
-
-        var tree = await db.Trees.FirstOrDefaultAsync(t => t.ProjectId == prj.Id && t.Code == treeCode);
-        if (tree == null) return NotFound();
-
-        var projectModel = mapper.Map<Project, ProjectVersionModel>(prj);
-
-        var nodes = await GetTreeModel(tree);
-
-        var model = new StructureModel
-        {
-            Project = projectModel,
-            Tree = nodes
-        };
-
-        return Json(model);
-    }
-
-    /// <summary>
-    /// Returns the graph of feature and attribute rlations.
+    /// Returns the graph of feature and attribute relations.
     /// </summary>
     /// <param name="project">The project code. </param>
     /// <param name="version">The project version. Default version if not provided.</param>
     /// <returns> Graph of feature and attribute relations</returns>
-    [HttpGet("{project}/features:relations", Name = "GetFeatureRelations")]
+    [HttpGet("{project}/versions/{version}/features:relations", Name = "GetFeatureRelations")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<FeatureRelationsModel>> GetFeatureRelations(string project, [FromQuery(Name = "version")] string? version)
+    public async Task<ActionResult<FeatureRelationsModel>> GetFeatureRelations(string project, string version)
     {
         var prj = await db.Projects.FirstOrDefaultAsync(p => p.Code == project && p.Version == version);
         if (prj == null) return NotFound();
@@ -218,7 +161,7 @@ public class ProjectController(ApplicationDbContext db, IMapper mapper) : Contro
         return Json(result);
     }
 
-    private async Task<TreeNodeModel[]> GetDefaultTreeModel(string projectCode, string? version)
+    private async Task<TreeNodeModel[]> GetDefaultTreeModel(string projectCode, string version)
     {
         var nodes = await db.Features
             .Where(f => f.Project.Code == projectCode && f.Project.Version == version)
@@ -229,25 +172,6 @@ public class ProjectController(ApplicationDbContext db, IMapper mapper) : Contro
                 TotalCount = f.AssertionGroups.SelectMany(gr => gr.Assertions).Count(),
                 AutomatedCount = f.AssertionGroups.SelectMany(gr => gr.Assertions).Count(a => a.IsAutomated),
                 FeatureCode = f.Code,
-            })
-            .ToArrayAsync();
-
-        return nodes;
-    }
-
-    private async Task<TreeNodeModel[]> GetTreeModel(Tree tree)
-    {
-        var nodes = await db.TreeNodes
-            .Where(n => n.TreeId == tree.Id)
-            .Select(n => new TreeNodeModel
-            {
-                Id = n.Id,
-                ParentId = n.ParentId,
-                Title = n.Title,
-                TotalCount = n.Amount,
-                AutomatedCount = n.AmountAutomated,
-                FeatureCode = n.Feature == null ? null : n.Feature.Code,
-                SortOrder = n.SortOrder,
             })
             .ToArrayAsync();
 
