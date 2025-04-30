@@ -58,6 +58,9 @@
    export ConnectionStrings__default="host=localhost;port=5432;database=tms;user name=postgres;password=123"
    dotnet ./SpecBox.WebApi/bin/Debug/net8.0/SpecBox.WebApi.dll --urls=http://+:8080
    ```
+   ```shell
+   dotnet run --project SpecBox.WebApi/SpecBox.WebApi.csproj
+   ```
 5. Откройте в браузере адрес http://localhost:8080/swagger
 
 ## Публичный контейнер
